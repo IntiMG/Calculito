@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Álgebra Lineal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            animation: fadeIn 0.6s ease-out;
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #5d4e75;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        p {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 15px 0;
+        }
+
+        a {
+            background: linear-gradient(135deg, #b8a9d9, #a294c7);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(184, 169, 217, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Álgebra Lineal</h1>
+        <p>Elige una herramienta:</p>
+        <ul>
+            <li><a href="/linear_system">Resolver Sistemas de Ecuaciones Lineales</a></li>
+            <li><a href="/properties">Propiedades Algebraicas de ℝⁿ</a></li>
+            <li><a href="/linear_combination">Combinación Lineal de Vectores</a></li>
+            <li><a href="/vector_equation">Ecuación Vectorial</a></li>
+            <li><a href="/matrix_equation">Ecuación Matricial</a></li>
+        </ul>
+    </div>
+</body>
+</html>
