@@ -368,3 +368,15 @@ body {
 .hidden {
   display: none !important;
 }
+
+.vector-grid { display: grid; gap: 16px; }
+.vector-grid.cols-1  { grid-template-columns: repeat(1,  minmax(180px,1fr)); }
+.vector-grid.cols-2  { grid-template-columns: repeat(2,  minmax(180px,1fr)); }
+.vector-grid.cols-3  { grid-template-columns: repeat(3,  minmax(180px,1fr)); }
+.vector-grid.cols-4  { grid-template-columns: repeat(4,  minmax(180px,1fr)); }
+.vector-grid.cols-5  { grid-template-columns: repeat(5,  minmax(180px,1fr)); }
+.vector-grid.cols-6  { grid-template-columns: repeat(6,  minmax(180px,1fr)); }
+.vector-grid.cols-7  { grid-template-columns: repeat(7,  minmax(180px,1fr)); }
+.vector-grid.cols-8  { grid-template-columns: repeat(8,  minmax(180px,1fr)); }
+.vector-grid.cols-9  { grid-template-columns: repeat(9,  minmax(180px,1fr)); }
+.vector-grid.cols-10 { grid-template-columns: repeat(10, minmax(180px,1fr)); }

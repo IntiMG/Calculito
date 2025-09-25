@@ -344,6 +344,17 @@
                 </ul>
             </div>
 
+            {% if comb_expr %}
+            <div class="solution-container">
+                <div class="solution-title">Ecuación explícita</div>
+                <ul class="solution-list">
+                    <li class="solution-item">
+                        <span class="value">{{ comb_expr }}</span>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+
             {% if steps %}
             <button class="btn toggle-steps" onclick="toggleSteps()">Mostrar Proceso</button>
             

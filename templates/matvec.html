@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Matriz x Vector (paso a paso)</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Matriz x Vector</h1>
+      <p>Ingresa A y v. Verás el resultado y el paso a paso (como combinación de columnas y por componentes).</p>
+    </div>
+
+    {% if error %}
+      <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    {% if step == 1 %}
+      <div class="card">
+        <div class="step-indicator">
+          <div class="step active">1</div><div class="step">2</div><div class="step">3</div>
+        </div>
+        <form method="post">
+          <input type="hidden" name="stage" value="1"/>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Filas de A (m)</label>
+              <input class="form-input" type="number" name="rows" min="1" max="10" value="3" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Columnas de A (n = dim de v)</label>
+              <input class="form-input" type="number" name="cols" min="1" max="10" value="3" required/>
+            </div>
+          </div>
+          <div class="btn-group"><button class="btn btn-primary" type="submit">Continuar</button></div>
+        </form>
+        <div class="btn-group" style="margin-top:1rem;">
+          <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al inicio</a>
+        </div>
+      </div>
+
+    {% elif step == 2 %}
+      <div class="card">
+        <div class="step-indicator">
+          <div class="step completed">1</div><div class="step active">2</div><div class="step">3</div>
+        </div>
+
+        <form method="post">
+          <input type="hidden" name="stage" value="2"/>
+          <input type="hidden" name="rows" value="{{ rows }}"/>
+          <input type="hidden" name="cols" value="{{ cols }}"/>
+
+        <div class="matrix-container">
+            <p class="math-notation">Ingresa A (m×n) y el vector columna v (n×1). Acepta fracciones tipo 3/2.</p>
+
+            <!-- Solo la matriz A -->
+            <table class="matrix-table">
+                {% for i in range(rows) %}
+                <tr>
+                    {% for j in range(cols) %}
+                    <td>
+                        <input class="matrix-cell" name="a_{{ i }}_{{ j }}"
+                            placeholder="a{{ i+1 }}{{ j+1 }}" required>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+
+            <!-- Vector v aparte (n×1) -->
+            <div style="margin-top:1rem">
+                <div class="math-notation">Vector v ({{ cols }}×1)</div>
+                <table class="matrix-table">
+                {% for j in range(cols) %}
+                    <tr>
+                    <td class="result-column">
+                        <input class="matrix-cell" name="v_{{ j }}"
+                            placeholder="v{{ j+1 }}" required>
+                    </td>
+                    </tr>
+                {% endfor %}
+                </table>
+            </div>
+        </div>
+
+
+          <div class="btn-group"><button class="btn btn-primary" type="submit">Calcular Av</button></div>
+        </form>
+      </div>
+
+    {% elif step == 3 %}
+      <div class="card">
+        <div class="step-indicator">
+          <div class="step completed">1</div><div class="step completed">2</div><div class="step active">3</div>
+        </div>
+
+        <div class="solution-container">
+          <div class="solution-title">Resultado numérico</div>
+          <ul class="solution-list">
+            <li class="solution-item">
+              <span class="variable-name">Av</span>
+              <span class="variable-value">{{ result|fmt_vec }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="solution-container">
+          <div class="solution-title">Interpretación: combinación lineal de las columnas de A</div>
+          <p class="math-notation">Av = v₁·A[:,1] + v₂·A[:,2] + … + vₙ·A[:,n]</p>
+
+          <h4 style="margin:10px 0;">1) Escalar cada columna por v<sub>j</sub></h4>
+          <ul class="solution-list">
+            {% for s in steps.col_scales %}
+              <li class="solution-item">
+                <span class="variable-name">v{{ s.j+1 }} = {{ s.scalar|fmt_num }} · A[:,{{ s.j+1 }}] {{ s.col|fmt_vec }}</span>
+                <span class="variable-value">= {{ s.res|fmt_vec }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+
+          <h4 style="margin:16px 0 8px;">2) Sumas parciales de las columnas escaladas</h4>
+          <ul class="solution-list">
+            {% for a in steps.col_adds %}
+              <li class="solution-item">
+                <span class="variable-name">{{ a.left|fmt_vec }} + {{ a.right|fmt_vec }}</span>
+                <span class="variable-value">= {{ a.res|fmt_vec }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="solution-container">
+          <div class="solution-title">Cálculo por componentes (producto punto de filas de A con v)</div>
+          <ul class="solution-list">
+            {% for r in steps.row_dots %}
+              <li class="solution-item" style="align-items:flex-start;">
+                <span class="variable-name">fila {{ r.i+1 }} · v</span>
+                <span class="variable-value">
+                  {% for t in r.terms %}
+                    {{ t|fmt_num }}{% if not loop.last %} + {% endif %}
+                  {% endfor %}
+                  = <b>{{ r.sum|fmt_num }}</b>
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="btn-group">
+          <a href="{{ url_for('matvec') }}" class="btn btn-secondary">Nueva multiplicación</a>
+          <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al inicio</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, url_for
 from models.equations_solver import Gauss
 from models.properties import Properties
 from models.matrix_equation import MatrixEquation
+from fractions import Fraction
+
 
 app = Flask(__name__)
 
@@ -23,6 +25,14 @@ def _fmt_num(x, tol=1e-9):
         return f"{xf:.6f}".rstrip("0").rstrip(".")
     except Exception:
         return str(x)
+
+def safe_fraction(val):
+    if val is None:
+        return Fraction(0)
+    s = str(val).strip()
+    if s == "":
+        return Fraction(0)
+    return Fraction(s)
 
 @app.template_filter("fmt_num")
 def jinja_fmt_num(x):
@@ -238,31 +248,60 @@ def solve_vector_equation():
     num_vectors = int(request.form["num_vectors"])
 
     try:
-        coefficients = [[float(request.form[f"v_{i}_{j}"]) for j in range(num_vectors)] for i in range(dimension)]
-        results = [float(request.form[f"b_{i}"]) for i in range(dimension)]
-    except (ValueError, KeyError):
-        return render_template("vector_equation.html", step=1, error="Error: Ingrese valores numéricos válidos.")
+        # Matriz A: columnas = vectores v_j que ingresa el usuario
+        coefficients = [[safe_fraction(request.form.get(f"v_{i}_{j}"))
+                         for j in range(num_vectors)] for i in range(dimension)]
+        # Vector b
+        results = [safe_fraction(request.form.get(f"b_{i}")) for i in range(dimension)]
+    except Exception:
+        return render_template("vector_equation.html", step=1, error="Error: Ingrese valores válidos (admite fracciones tipo 3/2).")
 
     try:
         gauss_solver = Gauss(coefficients, results, use_fractions=True)
-        solution = gauss_solver.get_formatted_solution()
+        solution_lines = gauss_solver.get_formatted_solution()
         steps = gauss_solver.get_steps()
         info = gauss_solver.get_classification()
         pivot_report = gauss_solver.get_pivot_report()
 
+        # Clasificación e interpretación
+        tipo = "Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")
+        consistent = info["status"] != "inconsistent"
+        interpretation = (
+            "Existe una única combinación de los vectores que produce b." if info["status"] == "unique" else
+            "Existen infinitas combinaciones (parámetros libres)." if info["status"] == "infinite" else
+            "No hay combinación de los vectores que produzca b."
+        )
+
+        # Si es única, arma "b = (x1)·v1 + (x2)·v2 + ..."
+        comb_expr = None
+        if info["status"] == "unique":
+            coeffs = gauss_solver.solution  # lista de Fractions
+            # formateo bonito de fracciones
+            def fmt(fr):
+                if hasattr(fr, "denominator") and fr.denominator == 1:
+                    return str(fr.numerator)
+                if hasattr(fr, "numerator"):
+                    return f"{fr.numerator}/{fr.denominator}"
+                # fallback
+                return f"{float(fr):.6f}".rstrip("0").rstrip(".")
+            terms = [f"({fmt(coeffs[j])})·v{j+1}" for j in range(info["n"])]
+            comb_expr = "b = " + " + ".join(terms)
+
         return render_template(
             "result.html",
-            solution=solution,
-            steps=steps,
-            consistent=info["consistent"],
-            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
+            solution=solution_lines,     # mostrará x1=..., x2=..., etc.
+            steps=steps,                 # paso a paso Gauss
+            consistent=consistent,
+            tipo=tipo,
             rank=info["rank"],
             n=info["n"],
-            pivot_report=pivot_report
+            pivot_report=pivot_report,
+            interpretation=interpretation,
+            comb_expr=comb_expr          # para mostrar ecuación explícita si es única
         )
     except Exception as e:
-        error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
-        return render_template("vector_equation.html", step=1, error=f"Error: {error_msg}")
+        return render_template("vector_equation.html", step=1, error=f"Error: {str(e)}")
+
 
 # Ruta para ecuación matricial
 @app.route("/matrix_equation", methods=["GET", "POST"])
@@ -318,6 +357,96 @@ def solve_matrix_equation():
     except Exception as e:
         error_msg = str(e)
         return render_template("matrix_form.html", step=1, error=f"Error: {error_msg}")
+
+# ===== Operaciones con vectores
+@app.route("/vector_ops", methods=["GET", "POST"])
+def vector_ops():
+    if request.method == "POST":
+        stage = request.form.get("stage", "1")
+
+        # Paso 1 -> Paso 2
+        if stage == "1":
+            try:
+                dimension = int(request.form["dimension"])
+                num_vectors = int(request.form["num_vectors"])
+                if not (1 <= dimension <= 10 and 1 <= num_vectors <= 10):
+                    raise ValueError()
+            except Exception:
+                return render_template("vector_ops.html", step=1,
+                                       error="Dimensión y # de vectores deben ser enteros entre 1 y 10.")
+            return render_template("vector_ops.html", step=2,
+                                   dimension=dimension, num_vectors=num_vectors)
+
+        # Paso 2 -> Resultado
+        if stage == "2":
+            try:
+                dimension = int(request.form["dimension"])
+                num_vectors = int(request.form["num_vectors"])
+
+                vectors, coefs = [], []
+                for j in range(num_vectors):
+                    vec = []
+                    for i in range(dimension):
+                        val = request.form.get(f"v_{i}_{j}", "").strip()
+                        vec.append(Fraction(val))  # acepta 2, -1.5, 3/2
+                    vectors.append(vec)
+                    a_val = request.form.get(f"a_{j}", "1").strip()
+                    coefs.append(Fraction(a_val))
+
+                result, steps = Properties.linear_combo_with_steps(vectors, coefs, use_fractions=True)
+
+                return render_template("vector_ops.html", step=3,
+                                       dimension=dimension, num_vectors=num_vectors,
+                                       vectors=vectors, coefs=coefs,
+                                       result=result, steps=steps)
+            except Exception as e:
+                return render_template("vector_ops.html", step=1, error=f"Revisa entradas: {e}")
+
+    # GET -> Paso 1
+    return render_template("vector_ops.html", step=1)
+
+
+# ===== Matriz × Vector con paso a paso =====
+@app.route("/matvec", methods=["GET", "POST"])
+def matvec():
+    if request.method == "POST":
+        stage = request.form.get("stage", "1")
+
+        # Paso 1 -> Paso 2: tamaños
+        if stage == "1":
+            try:
+                rows = int(request.form["rows"])
+                cols = int(request.form["cols"])
+                if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                    raise ValueError()
+            except Exception:
+                return render_template("matvec.html", step=1,
+                                       error="Filas y columnas deben ser enteros entre 1 y 10.")
+            return render_template("matvec.html", step=2, rows=rows, cols=cols)
+
+        # Paso 2 -> Resultado: datos de A y v
+        if stage == "2":
+            try:
+                rows = int(request.form["rows"])
+                cols = int(request.form["cols"])
+                # Acepta enteros/decimales/fracciones: usamos Fraction con strings
+                A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)]
+                    for i in range(rows)]
+                v = [safe_fraction(request.form.get(f"v_{j}")) for j in range(cols)]
+
+                res, steps = Properties.mat_vec_with_steps(A, v, use_fractions=True)
+
+                return render_template(
+                    "matvec.html",
+                    step=3, rows=rows, cols=cols,
+                    A=A, vec=v, result=res, steps=steps
+                )
+            except Exception as e:
+                return render_template("matvec.html", step=1, error=f"Revisa entradas: {e}")
+
+    # GET → Paso 1
+    return render_template("matvec.html", step=1)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operaciones con Vectores</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Operaciones con Vectores</h1>
+      <p>Define cuántos vectores usar y sus coeficientes para sumar/restar o combinar, con paso a paso.</p>
+    </div>
+
+    {% if error %}
+      <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    {% if step == 1 %}
+      <div class="card">
+        <div class="step-indicator">
+          <div class="step active">1</div><div class="step">2</div><div class="step">3</div>
+        </div>
+        <form method="post">
+          <input type="hidden" name="stage" value="1">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Dimensión (n)</label>
+              <input class="form-input" type="number" name="dimension" min="1" max="10" value="2" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label"># de vectores (m)</label>
+              <input class="form-input" type="number" name="num_vectors" min="1" max="10" value="2" required>
+            </div>
+          </div>
+          <div class="btn-group"><button class="btn btn-primary" type="submit">Continuar</button></div>
+        </form>
+      </div>
+
+    {% elif step == 2 %}
+      <div class="card">
+        <div class="step-indicator">
+          <div class="step completed">1</div><div class="step active">2</div><div class="step">3</div>
+        </div>
+        <form method="post">
+          <input type="hidden" name="stage" value="2">
+          <input type="hidden" name="dimension" value="{{ dimension }}">
+          <input type="hidden" name="num_vectors" value="{{ num_vectors }}">
+
+          <div class="matrix-container">
+            <p class="math-notation">Introduce cada vector y su coeficiente a<sub>j</sub>. Acepta fracciones (p.ej., 3/2).</p>
+            <div class="vector-grid cols-{{ num_vectors|int }}">
+              {% for j in range(num_vectors) %}
+              <div class="card" style="padding:1rem">
+                <h3 style="margin-bottom:.5rem;">Vector {{ j+1 }}</h3>
+                {% for i in range(dimension) %}
+                  <div class="form-group">
+                    <label class="form-label">v{{ i+1 }}:</label>
+                    <input class="form-input" name="v_{{ i }}_{{ j }}" placeholder="0" required>
+                  </div>
+                {% endfor %}
+                <div class="form-group">
+                  <label class="form-label">a{{ j+1 }} (coef.)</label>
+                  <input class="form-input" name="a_{{ j }}" value="{{ 1 if j < 2 else 0 }}">
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="btn-group"><button class="btn btn-primary" type="submit">Calcular</button></div>
+        </form>
+      </div>
+
+    {% elif step == 3 %}
+      <div class="card">
+        <div class="step-indicator">
+          <div class="step completed">1</div><div class="step completed">2</div><div class="step active">3</div>
+        </div>
+
+        <div class="solution-container">
+          <div class="solution-title">Resultado</div>
+          <ul class="solution-list">
+            <li class="solution-item">
+              <span class="variable-name">Vector final</span>
+              <span class="variable-value">{{ result|fmt_vec }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="solution-container">
+          <div class="solution-title">Paso a paso</div>
+
+          <h4 style="margin:10px 0;">1) Multiplicaciones por escalar</h4>
+          <ul class="solution-list">
+            {% for s in steps.scales %}
+              <li class="solution-item">
+                <span class="variable-name">{{ s.a|fmt_num }} · {{ s.v|fmt_vec }}</span>
+                <span class="variable-value">= {{ s.res|fmt_vec }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+
+          <h4 style="margin:16px 0 8px;">2) Sumas parciales</h4>
+          <ul class="solution-list">
+            {% for s in steps.adds %}
+              <li class="solution-item">
+                <span class="variable-name">{{ s.left|fmt_vec }} + {{ s.right|fmt_vec }}</span>
+                <span class="variable-value">= {{ s.res|fmt_vec }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="btn-group">
+          <a class="btn btn-secondary" href="{{ url_for('vector_ops') }}">Nueva operación</a>
+          <a class="btn btn-secondary" href="{{ url_for('home') }}">Volver al inicio</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>

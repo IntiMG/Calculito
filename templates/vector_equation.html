@@ -229,7 +229,11 @@
 
             <div class="vector-info">
                 <strong>Ecuación con {{ num_vectors }} vectores en ℝ^{{ dimension }}</strong>
-                <div class="math-symbols">∑ ci vi = b</div>
+                <div class="math-symbols">
+                    {% for j in range(num_vectors) %}
+                        x<sub>{{ j+1 }}</sub>·v<sub>{{ j+1 }}</sub>{% if not loop.last %} + {% else %} = b{% endif %}
+                    {% endfor %}
+                </div>
             </div>
 
             <form method="POST" action="/solve_vector_equation">
@@ -237,36 +241,33 @@
                 <input type="hidden" name="num_vectors" value="{{ num_vectors }}">
 
                 <div class="matrix-container">
-                    <p style="text-align: center; margin-bottom: 15px; color: #7f8c8d;">
-                        Ingresa los vectores vi (columnas) y b:
+                    <p style="text-align:center; margin-bottom:12px; color:#7f8c8d;">
+                        Ingresa los vectores v<sub>j</sub> (como <b>columnas</b>) y el vector b. Las incógnitas <b>x<sub>j</sub></b> se resolverán automáticamente.
                     </p>
-                    
+
                     <table class="matrix-table">
-                        {% for i in range(dimension) %}
-                            <tr>
-                                {% for j in range(num_vectors) %}
-                                    <td>
-                                        <input type="number" 
-                                               step="any" 
-                                               name="v_{{ i }}_{{ j }}" 
-                                               placeholder="v{{ j+1 }}{{ i+1 }}" 
-                                               required>
-                                    </td>
-                                {% endfor %}
-                                <td style="text-align: center; color: #7f8c8d; font-size: 1.5em; padding: 0 10px;">=</td>
-                                <td class="result-column">
-                                    <input type="number" 
-                                           step="any" 
-                                           name="b_{{ i }}" 
-                                           placeholder="b{{ i+1 }}" 
-                                           required>
-                                </td>
-                            </tr>
-                        {% endfor %}
+                        <!-- encabezado con xj·vj -->
+                        <tr>
+                            {% for j in range(num_vectors) %}
+                                <th style="text-align:center">x<sub>{{ j+1 }}</sub>·v<sub>{{ j+1 }}</sub></th>
+                            {% endfor %}
+                            <th></th>
+                            <th style="text-align:center">b</th>
+                        </tr>
+
+                    {% for i in range(dimension) %}
+                        <tr>
+                            {% for j in range(num_vectors) %}
+                                <td><input type="text" class="matrix-cell" name="v_{{ i }}_{{ j }}" placeholder="v{{ j+1 }}{{ i+1 }}" required></td>
+                            {% endfor %}
+                            <td class="matrix-separator">=</td>
+                            <td class="result-column"><input type="text" class="matrix-cell" name="b_{{ i }}" placeholder="b{{ i+1 }}" required></td>
+                        </tr>
+                    {% endfor %}
                     </table>
                 </div>
-                
-                <button type="submit" class="btn">Resolver Ecuación</button>
+
+                <button type="submit" class="btn">Resolver ecuación vectorial</button>
             </form>
         {% endif %}
     </div>

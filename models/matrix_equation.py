@@ -1,4 +1,4 @@
-# models/matrix_equation.py
+
 # Nuevo archivo para resolver A X = B con B posiblemente matriz
 
 from models.equations_solver import Gauss  # Asumiendo que existe este import
