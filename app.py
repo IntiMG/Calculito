@@ -120,7 +120,8 @@ def solve_linear_system():
             tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
             rank=info["rank"],
             n=info["n"],
-            pivot_report=pivot_report
+            pivot_report=pivot_report,
+            back_url=url_for("linear_system")
         )
     except Exception as e:
         error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
@@ -215,7 +216,8 @@ def solve_linear_combination():
             rank=info["rank"],
             n=info["n"],
             pivot_report=pivot_report,
-            interpretation=interpretation
+            interpretation=interpretation,
+            back_url=url_for("linear_combination")
         )
     except Exception as e:
         error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
@@ -303,7 +305,8 @@ def solve_homogeneous():
             rank=info["rank"],
             n=info["n"],
             pivot_report=pivot_report,
-            interpretation=interpretation
+            interpretation=interpretation,
+            back_url=url_for("homogeneous")
         )
     except Exception as e:
         return render_template("homogeneous.html", step=1, error=f"Revisa entradas: {e}")
@@ -361,7 +364,8 @@ def solve_dependence():
             rank=info["rank"],
             n=info["n"],
             pivot_report=pivot_report,
-            interpretation=interpretation
+            interpretation=interpretation,
+            back_url=url_for("dependence")
         )
     except Exception as e:
         return render_template("dependence.html", step=1, error=f"Revisa entradas: {e}")
@@ -421,7 +425,8 @@ def solve_vector_equation():
             n=info["n"],
             pivot_report=pivot_report,
             interpretation=interpretation,
-            comb_expr=comb_expr          # para mostrar ecuación explícita si es única
+            comb_expr=comb_expr,          # para mostrar ecuación explícita si es única
+            back_url=url_for("vector_equation")
         )
     except Exception as e:
         return render_template("vector_equation.html", step=1, error=f"Error: {str(e)}")
