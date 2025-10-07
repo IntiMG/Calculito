@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Homogéneo AX=0</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Sistema Homogéneo</h1>
+    <p>Resuelve AX = 0 y muestra el paso a paso.</p>
+  </div>
+
+  {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+
+  {% if step == 1 %}
+  <div class="card">
+    <div class="step-indicator"><div class="step active">1</div><div class="step">2</div><div class="step">3</div></div>
+    <form method="post">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Filas (m)</label><input class="form-input" type="number" name="rows" min="1" max="10" required></div>
+        <div class="form-group"><label class="form-label">Columnas (n)</label><input class="form-input" type="number" name="cols" min="1" max="10" required></div>
+      </div>
+      <div class="btn-group"><button class="btn btn-primary" type="submit">Continuar</button></div>
+    </form>
+    <div class="btn-group" style="margin-top:1rem;"><a href="{{ url_for('home') }}" class="btn btn-secondary">Volver</a></div>
+  </div>
+
+  {% elif step == 2 %}
+  <div class="card">
+    <div class="step-indicator"><div class="step completed">1</div><div class="step active">2</div><div class="step">3</div></div>
+
+    <form method="post" action="/solve_homogeneous">
+      <input type="hidden" name="rows" value="{{ rows }}"><input type="hidden" name="cols" value="{{ cols }}">
+      <div class="matrix-container">
+        <p class="math-notation">Ingresa A (m×n). Se resolverá AX = 0. Acepta fracciones (3/2).</p>
+        <table class="matrix-table">
+          {% for i in range(rows) %}
+          <tr>
+            {% for j in range(cols) %}
+              <td><input class="matrix-cell" name="a_{{ i }}_{{ j }}" placeholder="a{{ i+1 }}{{ j+1 }}" required></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div class="btn-group"><button class="btn btn-primary" type="submit">Resolver AX = 0</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

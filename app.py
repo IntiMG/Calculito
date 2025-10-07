@@ -242,6 +242,116 @@ def vector_equation():
 
     return render_template("vector_equation.html", step=1)
 
+# ===== AX = 0 (sistema homogéneo) =====
+@app.route("/homogeneous", methods=["GET", "POST"])
+def homogeneous():
+    if request.method == "POST":
+        rows = request.form.get("rows")
+        cols = request.form.get("cols")
+        if rows and cols:
+            try:
+                rows = int(rows); cols = int(cols)
+                if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                    raise ValueError()
+                return render_template("homogeneous.html", step=2, rows=rows, cols=cols)
+            except Exception:
+                return render_template("homogeneous.html", step=1, error="Ingresa tamaños válidos (1–10).")
+        return render_template("homogeneous.html", step=1, error="Completa ambos campos.")
+    return render_template("homogeneous.html", step=1)
+
+@app.route("/solve_homogeneous", methods=["POST"])
+def solve_homogeneous():
+    rows = int(request.form["rows"])
+    cols = int(request.form["cols"])
+    try:
+        A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        b = [safe_fraction(0) for _ in range(rows)]  # vector cero
+        gauss = Gauss(A, b, use_fractions=True)
+        solution_lines = gauss.get_formatted_solution()
+        steps = gauss.get_steps()
+        info = gauss.get_classification()
+        pivot_report = gauss.get_pivot_report()
+
+        # Interpretación especial homogénea
+        if info["status"] == "unique":
+            interpretation = "Sistema homogéneo con única solución: la trivial (x = 0)."
+        elif info["status"] == "infinite":
+            interpretation = "Sistema homogéneo con soluciones no triviales (infinitas)."
+        else:
+            # AX=0 nunca es inconsistente, pero por si acaso:
+            interpretation = "Sistema homogéneo inconsistente (caso patológico)."
+
+        return render_template(
+            "result.html",
+            solution=solution_lines,
+            steps=steps,
+            consistent=info["consistent"],
+            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
+            rank=info["rank"],
+            n=info["n"],
+            pivot_report=pivot_report,
+            interpretation=interpretation
+        )
+    except Exception as e:
+        return render_template("homogeneous.html", step=1, error=f"Revisa entradas: {e}")
+
+
+# ===== Dependencia / Independencia lineal =====
+@app.route("/dependence", methods=["GET", "POST"])
+def dependence():
+    if request.method == "POST":
+        dimension = request.form.get("dimension")
+        num_vectors = request.form.get("num_vectors")
+        if dimension and num_vectors:
+            try:
+                dimension = int(dimension); num_vectors = int(num_vectors)
+                if not (1 <= dimension <= 10 and 1 <= num_vectors <= 10):
+                    raise ValueError()
+                return render_template("dependence.html", step=2,
+                                       dimension=dimension, num_vectors=num_vectors)
+            except Exception:
+                return render_template("dependence.html", step=1,
+                                       error="Ingresa valores enteros entre 1 y 10.")
+        return render_template("dependence.html", step=1, error="Completa ambos campos.")
+    return render_template("dependence.html", step=1)
+
+@app.route("/solve_dependence", methods=["POST"])
+def solve_dependence():
+    dimension = int(request.form["dimension"])
+    num_vectors = int(request.form["num_vectors"])
+    try:
+        # A tiene n filas (= dimensión) y m columnas (= #vectores). Columnas = vectores dados
+        A = [[safe_fraction(request.form.get(f"v_{i}_{j}"))
+              for j in range(num_vectors)] for i in range(dimension)]
+        b = [safe_fraction(0) for _ in range(dimension)]  # c1..cm resuelven A c = 0
+        gauss = Gauss(A, b, use_fractions=True)
+        solution_lines = gauss.get_formatted_solution()
+        steps = gauss.get_steps()
+        info = gauss.get_classification()
+        pivot_report = gauss.get_pivot_report()
+
+        # Regla: solo solución trivial -> independientes; si hay no triviales -> dependientes
+        if info["status"] == "unique":
+            interpretation = "Los vectores son linealmente INDEPENDIENTES (solo solución trivial)."
+        elif info["status"] == "infinite":
+            interpretation = "Los vectores son linealmente DEPENDIENTES (existen soluciones no triviales)."
+        else:
+            interpretation = "Sistema inconsistente (no debe ocurrir en AX=0)."
+
+        return render_template(
+            "result.html",
+            solution=solution_lines,
+            steps=steps,
+            consistent=info["consistent"],
+            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
+            rank=info["rank"],
+            n=info["n"],
+            pivot_report=pivot_report,
+            interpretation=interpretation
+        )
+    except Exception as e:
+        return render_template("dependence.html", step=1, error=f"Revisa entradas: {e}")
+
 @app.route("/solve_vector_equation", methods=["POST"])
 def solve_vector_equation():
     dimension = int(request.form["dimension"])
