@@ -264,22 +264,35 @@ def solve_homogeneous():
     rows = int(request.form["rows"])
     cols = int(request.form["cols"])
     try:
+        # A: m×n (acepta fracciones tipo "3/2")
         A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)] for i in range(rows)]
-        b = [safe_fraction(0) for _ in range(rows)]  # vector cero
+        # b: m×1 ingresado por el usuario (YA NO asumimos cero)
+        b = [safe_fraction(request.form.get(f"b_{i}")) for i in range(rows)]
+
+        # Detecta si es homogéneo o no
+        is_homogeneous = all(bi == 0 for bi in b)
+
         gauss = Gauss(A, b, use_fractions=True)
         solution_lines = gauss.get_formatted_solution()
         steps = gauss.get_steps()
         info = gauss.get_classification()
         pivot_report = gauss.get_pivot_report()
 
-        # Interpretación especial homogénea
-        if info["status"] == "unique":
-            interpretation = "Sistema homogéneo con única solución: la trivial (x = 0)."
-        elif info["status"] == "infinite":
-            interpretation = "Sistema homogéneo con soluciones no triviales (infinitas)."
+        # Interpretación según homogéneo/no homogéneo y tipo de solución
+        if is_homogeneous:
+            if info["status"] == "unique":
+                interpretation = "Sistema homogéneo (b = 0) con única solución: la trivial (x = 0)."
+            elif info["status"] == "infinite":
+                interpretation = "Sistema homogéneo (b = 0) con soluciones no triviales (infinitas)."
+            else:
+                interpretation = "Sistema homogéneo (b = 0) inconsistente (caso patológico)."
         else:
-            # AX=0 nunca es inconsistente, pero por si acaso:
-            interpretation = "Sistema homogéneo inconsistente (caso patológico)."
+            if info["status"] == "unique":
+                interpretation = "Sistema NO homogéneo (b ≠ 0) con solución única."
+            elif info["status"] == "infinite":
+                interpretation = "Sistema NO homogéneo (b ≠ 0) con infinitas soluciones (familia afín)."
+            else:
+                interpretation = "Sistema NO homogéneo (b ≠ 0) inconsistente (no tiene solución)."
 
         return render_template(
             "result.html",
@@ -294,6 +307,7 @@ def solve_homogeneous():
         )
     except Exception as e:
         return render_template("homogeneous.html", step=1, error=f"Revisa entradas: {e}")
+
 
 
 # ===== Dependencia / Independencia lineal =====

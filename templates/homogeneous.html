@@ -27,28 +27,34 @@
     <div class="btn-group" style="margin-top:1rem;"><a href="{{ url_for('home') }}" class="btn btn-secondary">Volver</a></div>
   </div>
 
-  {% elif step == 2 %}
-  <div class="card">
-    <div class="step-indicator"><div class="step completed">1</div><div class="step active">2</div><div class="step">3</div></div>
+    {% elif step == 2 %}
+        <div class="card">
+        <div class="step-indicator"><div class="step completed">1</div><div class="step active">2</div><div class="step">3</div></div>
 
-    <form method="post" action="/solve_homogeneous">
-      <input type="hidden" name="rows" value="{{ rows }}"><input type="hidden" name="cols" value="{{ cols }}">
-      <div class="matrix-container">
-        <p class="math-notation">Ingresa A (m×n). Se resolverá AX = 0. Acepta fracciones (3/2).</p>
-        <table class="matrix-table">
-          {% for i in range(rows) %}
-          <tr>
-            {% for j in range(cols) %}
-              <td><input class="matrix-cell" name="a_{{ i }}_{{ j }}" placeholder="a{{ i+1 }}{{ j+1 }}" required></td>
-            {% endfor %}
-          </tr>
-          {% endfor %}
-        </table>
-      </div>
-      <div class="btn-group"><button class="btn btn-primary" type="submit">Resolver AX = 0</button></div>
-    </form>
-  </div>
-  {% endif %}
+        <form method="post" action="/solve_homogeneous">
+            <input type="hidden" name="rows" value="{{ rows }}"><input type="hidden" name="cols" value="{{ cols }}">
+            <div class="matrix-container">
+            <p class="math-notation">
+                Ingresa la matriz A (m×n) y el vector b (m×1). Si b es todo cero, el sistema es <b>homogéneo</b>; de lo contrario, es <b>no homogéneo</b>.
+                Acepta fracciones (por ejemplo, 3/2).
+            </p>
+            <table class="matrix-table">
+                {% for i in range(rows) %}
+                <tr>
+                {% for j in range(cols) %}
+                    <td><input class="matrix-cell" name="a_{{ i }}_{{ j }}" placeholder="a{{ i+1 }}{{ j+1 }}" required></td>
+                {% endfor %}
+                <td class="matrix-separator">|</td>
+                <td class="result-column"><input class="matrix-cell" name="b_{{ i }}" placeholder="b{{ i+1 }}" required></td>
+                </tr>
+                {% endfor %}
+            </table>
+            </div>
+            <div class="btn-group"><button class="btn btn-primary" type="submit">Resolver A x = b</button></div>
+        </form>
+        </div>
+    {% endif %}
+
 </div>
 </body>
 </html>
