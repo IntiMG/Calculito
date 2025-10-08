@@ -120,7 +120,8 @@ def solve_linear_system():
             tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
             rank=info["rank"],
             n=info["n"],
-            pivot_report=pivot_report
+            pivot_report=pivot_report,
+            back_url=url_for("linear_system")
         )
     except Exception as e:
         error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
@@ -215,7 +216,8 @@ def solve_linear_combination():
             rank=info["rank"],
             n=info["n"],
             pivot_report=pivot_report,
-            interpretation=interpretation
+            interpretation=interpretation,
+            back_url=url_for("linear_combination")
         )
     except Exception as e:
         error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
@@ -241,6 +243,84 @@ def vector_equation():
             return render_template("vector_equation.html", step=1, error="Por favor, complete todos los campos.")
 
     return render_template("vector_equation.html", step=1)
+
+# ===== AX = 0 (sistema homogéneo y dependencia lineal) =====
+@app.route("/homogeneous", methods=["GET", "POST"])
+def homogeneous():
+    if request.method == "POST":
+        rows = request.form.get("rows")
+        cols = request.form.get("cols")
+        if rows and cols:
+            try:
+                rows = int(rows); cols = int(cols)
+                if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                    raise ValueError()
+                return render_template("homogeneous.html", step=2, rows=rows, cols=cols)
+            except Exception:
+                return render_template("homogeneous.html", step=1, error="Ingresa tamaños válidos (1–10).")
+        return render_template("homogeneous.html", step=1, error="Completa ambos campos.")
+    return render_template("homogeneous.html", step=1)
+
+@app.route("/solve_homogeneous", methods=["POST"])
+def solve_homogeneous():
+    rows = int(request.form["rows"])
+    cols = int(request.form["cols"])
+    try:
+        # A: matriz de coeficientes
+        A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        # b: términos independientes
+        b = [safe_fraction(request.form.get(f"b_{i}")) for i in range(rows)]
+
+        # Detecta si es sistema homogéneo
+        is_homogeneous = all(bi == 0 for bi in b)
+
+        gauss = Gauss(A, b, use_fractions=True)
+        solution_lines = gauss.get_formatted_solution()
+        steps = gauss.get_steps()
+        info = gauss.get_classification()
+        pivot_report = gauss.get_pivot_report()
+
+        # Interpretación principal (según tipo de solución)
+        if is_homogeneous:
+            if info["status"] == "unique":
+                interpretation = "Sistema homogéneo (b = 0) con única solución: la trivial (x = 0)."
+            elif info["status"] == "infinite":
+                interpretation = "Sistema homogéneo (b = 0) con soluciones no triviales (infinitas)."
+            else:
+                interpretation = "Sistema homogéneo (b = 0) inconsistente (caso patológico)."
+        else:
+            if info["status"] == "unique":
+                interpretation = "Sistema NO homogéneo (b ≠ 0) con solución única."
+            elif info["status"] == "infinite":
+                interpretation = "Sistema NO homogéneo (b ≠ 0) con infinitas soluciones (familia afín)."
+            else:
+                interpretation = "Sistema NO homogéneo (b ≠ 0) inconsistente (no tiene solución)."
+
+        # Calcular dependencia lineal (siempre, para homogéneo y no homogéneo)
+        dependence = (
+            "Los vectores son linealmente DEPENDIENTES (existen soluciones no triviales en el sistema homogéneo)."
+            if info["rank"] < cols
+            else "Los vectores son linealmente INDEPENDIENTES (solución única o ninguna en el sistema homogéneo)."
+        )
+
+        return render_template(
+            "homogeneous.html",
+            step=3,
+            rows=rows,
+            cols=cols,
+            solution=solution_lines,
+            steps=steps,
+            consistent=info["consistent"],
+            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
+            rank=info["rank"],
+            n=info["n"],
+            pivot_report=pivot_report,
+            interpretation=interpretation,
+            dependence=dependence
+        )
+    except Exception as e:
+        return render_template("homogeneous.html", step=1, error=f"Revisa entradas: {e}")
+
 
 @app.route("/solve_vector_equation", methods=["POST"])
 def solve_vector_equation():
@@ -297,7 +377,8 @@ def solve_vector_equation():
             n=info["n"],
             pivot_report=pivot_report,
             interpretation=interpretation,
-            comb_expr=comb_expr          # para mostrar ecuación explícita si es única
+            comb_expr=comb_expr,          # para mostrar ecuación explícita si es única
+            back_url=url_for("vector_equation")
         )
     except Exception as e:
         return render_template("vector_equation.html", step=1, error=f"Error: {str(e)}")
