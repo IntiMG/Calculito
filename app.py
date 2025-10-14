@@ -2,8 +2,8 @@ from flask import Flask, render_template, request, url_for
 from models.equations_solver import Gauss
 from models.properties import Properties
 from models.matrix_equation import MatrixEquation
+from models.arithmetic_operations import ArOperations
 from fractions import Fraction
-
 
 app = Flask(__name__)
 
@@ -42,7 +42,7 @@ def jinja_fmt_num(x):
 def jinja_fmt_vec(vec):
     return "[" + ", ".join(_fmt_num(v) for v in vec) + "]"
 
-
+# ========= Rutas Existentes =========
 @app.route("/", methods=["GET"])
 def home():
     return render_template("home.html")
@@ -244,94 +244,14 @@ def vector_equation():
 
     return render_template("vector_equation.html", step=1)
 
-# ===== AX = 0 (sistema homogéneo y dependencia lineal) =====
-@app.route("/homogeneous", methods=["GET", "POST"])
-def homogeneous():
-    if request.method == "POST":
-        rows = request.form.get("rows")
-        cols = request.form.get("cols")
-        if rows and cols:
-            try:
-                rows = int(rows); cols = int(cols)
-                if not (1 <= rows <= 10 and 1 <= cols <= 10):
-                    raise ValueError()
-                return render_template("homogeneous.html", step=2, rows=rows, cols=cols)
-            except Exception:
-                return render_template("homogeneous.html", step=1, error="Ingresa tamaños válidos (1–10).")
-        return render_template("homogeneous.html", step=1, error="Completa ambos campos.")
-    return render_template("homogeneous.html", step=1)
-
-@app.route("/solve_homogeneous", methods=["POST"])
-def solve_homogeneous():
-    rows = int(request.form["rows"])
-    cols = int(request.form["cols"])
-    try:
-        # A: matriz de coeficientes
-        A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)] for i in range(rows)]
-        # b: términos independientes
-        b = [safe_fraction(request.form.get(f"b_{i}")) for i in range(rows)]
-
-        # Detecta si es sistema homogéneo
-        is_homogeneous = all(bi == 0 for bi in b)
-
-        gauss = Gauss(A, b, use_fractions=True)
-        solution_lines = gauss.get_formatted_solution()
-        steps = gauss.get_steps()
-        info = gauss.get_classification()
-        pivot_report = gauss.get_pivot_report()
-
-        # Interpretación principal (según tipo de solución)
-        if is_homogeneous:
-            if info["status"] == "unique":
-                interpretation = "Sistema homogéneo (b = 0) con única solución: la trivial (x = 0)."
-            elif info["status"] == "infinite":
-                interpretation = "Sistema homogéneo (b = 0) con soluciones no triviales (infinitas)."
-            else:
-                interpretation = "Sistema homogéneo (b = 0) inconsistente (caso patológico)."
-        else:
-            if info["status"] == "unique":
-                interpretation = "Sistema NO homogéneo (b ≠ 0) con solución única."
-            elif info["status"] == "infinite":
-                interpretation = "Sistema NO homogéneo (b ≠ 0) con infinitas soluciones (familia afín)."
-            else:
-                interpretation = "Sistema NO homogéneo (b ≠ 0) inconsistente (no tiene solución)."
-
-        # Calcular dependencia lineal (siempre, para homogéneo y no homogéneo)
-        dependence = (
-            "Los vectores son linealmente DEPENDIENTES (existen soluciones no triviales en el sistema homogéneo)."
-            if info["rank"] < cols
-            else "Los vectores son linealmente INDEPENDIENTES (solución única o ninguna en el sistema homogéneo)."
-        )
-
-        return render_template(
-            "homogeneous.html",
-            step=3,
-            rows=rows,
-            cols=cols,
-            solution=solution_lines,
-            steps=steps,
-            consistent=info["consistent"],
-            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
-            rank=info["rank"],
-            n=info["n"],
-            pivot_report=pivot_report,
-            interpretation=interpretation,
-            dependence=dependence
-        )
-    except Exception as e:
-        return render_template("homogeneous.html", step=1, error=f"Revisa entradas: {e}")
-
-
 @app.route("/solve_vector_equation", methods=["POST"])
 def solve_vector_equation():
     dimension = int(request.form["dimension"])
     num_vectors = int(request.form["num_vectors"])
 
     try:
-        # Matriz A: columnas = vectores v_j que ingresa el usuario
         coefficients = [[safe_fraction(request.form.get(f"v_{i}_{j}"))
                          for j in range(num_vectors)] for i in range(dimension)]
-        # Vector b
         results = [safe_fraction(request.form.get(f"b_{i}")) for i in range(dimension)]
     except Exception:
         return render_template("vector_equation.html", step=1, error="Error: Ingrese valores válidos (admite fracciones tipo 3/2).")
@@ -343,7 +263,6 @@ def solve_vector_equation():
         info = gauss_solver.get_classification()
         pivot_report = gauss_solver.get_pivot_report()
 
-        # Clasificación e interpretación
         tipo = "Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")
         consistent = info["status"] != "inconsistent"
         interpretation = (
@@ -352,37 +271,33 @@ def solve_vector_equation():
             "No hay combinación de los vectores que produzca b."
         )
 
-        # Si es única, arma "b = (x1)·v1 + (x2)·v2 + ..."
         comb_expr = None
         if info["status"] == "unique":
-            coeffs = gauss_solver.solution  # lista de Fractions
-            # formateo bonito de fracciones
+            coeffs = gauss_solver.solution
             def fmt(fr):
                 if hasattr(fr, "denominator") and fr.denominator == 1:
                     return str(fr.numerator)
                 if hasattr(fr, "numerator"):
                     return f"{fr.numerator}/{fr.denominator}"
-                # fallback
                 return f"{float(fr):.6f}".rstrip("0").rstrip(".")
             terms = [f"({fmt(coeffs[j])})·v{j+1}" for j in range(info["n"])]
             comb_expr = "b = " + " + ".join(terms)
 
         return render_template(
             "result.html",
-            solution=solution_lines,     # mostrará x1=..., x2=..., etc.
-            steps=steps,                 # paso a paso Gauss
+            solution=solution_lines,
+            steps=steps,
             consistent=consistent,
             tipo=tipo,
             rank=info["rank"],
             n=info["n"],
             pivot_report=pivot_report,
             interpretation=interpretation,
-            comb_expr=comb_expr,          # para mostrar ecuación explícita si es única
+            comb_expr=comb_expr,
             back_url=url_for("vector_equation")
         )
     except Exception as e:
         return render_template("vector_equation.html", step=1, error=f"Error: {str(e)}")
-
 
 # Ruta para ecuación matricial
 @app.route("/matrix_equation", methods=["GET", "POST"])
@@ -439,13 +354,85 @@ def solve_matrix_equation():
         error_msg = str(e)
         return render_template("matrix_form.html", step=1, error=f"Error: {error_msg}")
 
-# ===== Operaciones con vectores
+# Ruta para sistema homogéneo y dependencia lineal
+@app.route("/homogeneous", methods=["GET", "POST"])
+def homogeneous():
+    if request.method == "POST":
+        rows = request.form.get("rows")
+        cols = request.form.get("cols")
+        if rows and cols:
+            try:
+                rows = int(rows)
+                cols = int(cols)
+                if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                    raise ValueError()
+                return render_template("homogeneous.html", step=2, rows=rows, cols=cols)
+            except Exception:
+                return render_template("homogeneous.html", step=1, error="Ingresa tamaños válidos (1–10).")
+        return render_template("homogeneous.html", step=1, error="Completa ambos campos.")
+    return render_template("homogeneous.html", step=1)
+
+@app.route("/solve_homogeneous", methods=["POST"])
+def solve_homogeneous():
+    rows = int(request.form["rows"])
+    cols = int(request.form["cols"])
+    try:
+        A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        b = [safe_fraction(request.form.get(f"b_{i}")) for i in range(rows)]
+
+        is_homogeneous = all(bi == 0 for bi in b)
+
+        gauss = Gauss(A, b, use_fractions=True)
+        solution_lines = gauss.get_formatted_solution()
+        steps = gauss.get_steps()
+        info = gauss.get_classification()
+        pivot_report = gauss.get_pivot_report()
+
+        if is_homogeneous:
+            if info["status"] == "unique":
+                interpretation = "Sistema homogéneo (b = 0) con única solución: la trivial (x = 0)."
+            elif info["status"] == "infinite":
+                interpretation = "Sistema homogéneo (b = 0) con soluciones no triviales (infinitas)."
+            else:
+                interpretation = "Sistema homogéneo (b = 0) inconsistente (caso patológico)."
+        else:
+            if info["status"] == "unique":
+                interpretation = "Sistema NO homogéneo (b ≠ 0) con solución única."
+            elif info["status"] == "infinite":
+                interpretation = "Sistema NO homogéneo (b ≠ 0) con infinitas soluciones (familia afín)."
+            else:
+                interpretation = "Sistema NO homogéneo (b ≠ 0) inconsistente (no tiene solución)."
+
+        dependence = (
+            "Los vectores son linealmente DEPENDIENTES (existen soluciones no triviales en el sistema homogéneo)."
+            if info["rank"] < cols
+            else "Los vectores son linealmente INDEPENDIENTES (solución única o ninguna en el sistema homogéneo)."
+        )
+
+        return render_template(
+            "homogeneous.html",
+            step=3,
+            rows=rows,
+            cols=cols,
+            solution=solution_lines,
+            steps=steps,
+            consistent=info["consistent"],
+            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
+            rank=info["rank"],
+            n=info["n"],
+            pivot_report=pivot_report,
+            interpretation=interpretation,
+            dependence=dependence
+        )
+    except Exception as e:
+        return render_template("homogeneous.html", step=1, error=f"Revisa entradas: {e}")
+
+# Ruta para operaciones con vectores
 @app.route("/vector_ops", methods=["GET", "POST"])
 def vector_ops():
     if request.method == "POST":
         stage = request.form.get("stage", "1")
 
-        # Paso 1 -> Paso 2
         if stage == "1":
             try:
                 dimension = int(request.form["dimension"])
@@ -454,11 +441,10 @@ def vector_ops():
                     raise ValueError()
             except Exception:
                 return render_template("vector_ops.html", step=1,
-                                       error="Dimensión y # de vectores deben ser enteros entre 1 y 10.")
+                                      error="Dimensión y # de vectores deben ser enteros entre 1 y 10.")
             return render_template("vector_ops.html", step=2,
-                                   dimension=dimension, num_vectors=num_vectors)
+                                  dimension=dimension, num_vectors=num_vectors)
 
-        # Paso 2 -> Resultado
         if stage == "2":
             try:
                 dimension = int(request.form["dimension"])
@@ -469,7 +455,7 @@ def vector_ops():
                     vec = []
                     for i in range(dimension):
                         val = request.form.get(f"v_{i}_{j}", "").strip()
-                        vec.append(Fraction(val))  # acepta 2, -1.5, 3/2
+                        vec.append(Fraction(val))
                     vectors.append(vec)
                     a_val = request.form.get(f"a_{j}", "1").strip()
                     coefs.append(Fraction(a_val))
@@ -477,23 +463,20 @@ def vector_ops():
                 result, steps = Properties.linear_combo_with_steps(vectors, coefs, use_fractions=True)
 
                 return render_template("vector_ops.html", step=3,
-                                       dimension=dimension, num_vectors=num_vectors,
-                                       vectors=vectors, coefs=coefs,
-                                       result=result, steps=steps)
+                                      dimension=dimension, num_vectors=num_vectors,
+                                      vectors=vectors, coefs=coefs,
+                                      result=result, steps=steps)
             except Exception as e:
                 return render_template("vector_ops.html", step=1, error=f"Revisa entradas: {e}")
 
-    # GET -> Paso 1
     return render_template("vector_ops.html", step=1)
 
-
-# ===== Matriz × Vector con paso a paso =====
+# Ruta para multiplicación matriz por vector
 @app.route("/matvec", methods=["GET", "POST"])
 def matvec():
     if request.method == "POST":
         stage = request.form.get("stage", "1")
 
-        # Paso 1 -> Paso 2: tamaños
         if stage == "1":
             try:
                 rows = int(request.form["rows"])
@@ -502,17 +485,15 @@ def matvec():
                     raise ValueError()
             except Exception:
                 return render_template("matvec.html", step=1,
-                                       error="Filas y columnas deben ser enteros entre 1 y 10.")
+                                      error="Filas y columnas deben ser enteros entre 1 y 10.")
             return render_template("matvec.html", step=2, rows=rows, cols=cols)
 
-        # Paso 2 -> Resultado: datos de A y v
         if stage == "2":
             try:
                 rows = int(request.form["rows"])
                 cols = int(request.form["cols"])
-                # Acepta enteros/decimales/fracciones: usamos Fraction con strings
                 A = [[safe_fraction(request.form.get(f"a_{i}_{j}")) for j in range(cols)]
-                    for i in range(rows)]
+                     for i in range(rows)]
                 v = [safe_fraction(request.form.get(f"v_{j}")) for j in range(cols)]
 
                 res, steps = Properties.mat_vec_with_steps(A, v, use_fractions=True)
@@ -525,9 +506,152 @@ def matvec():
             except Exception as e:
                 return render_template("matvec.html", step=1, error=f"Revisa entradas: {e}")
 
-    # GET → Paso 1
     return render_template("matvec.html", step=1)
 
+# ========= Nuevas Rutas para Operaciones con Matrices =========
+@app.route("/matrix_operations", methods=["GET"])
+def matrix_operations():
+    return render_template("matrix_operations.html")
+
+@app.route("/matrix_add", methods=["GET", "POST"])
+def matrix_add():
+    if request.method == "POST":
+        try:
+            rows = int(request.form["rows"])
+            cols = int(request.form["cols"])
+            if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                return render_template("matrix_add.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
+            return render_template("matrix_add.html", step=2, rows=rows, cols=cols)
+        except ValueError:
+            return render_template("matrix_add.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+    return render_template("matrix_add.html", step=1)
+
+@app.route("/matrix_add_solve", methods=["POST"])
+def matrix_add_solve():
+    try:
+        rows = int(request.form["rows"])
+        cols = int(request.form["cols"])
+        matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        matrix_b = [[safe_fraction(request.form.get(f"B_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        result = ArOperations.addTwoMatrix(matrix_a, matrix_b)
+        return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b, result=result)
+    except ValueError as e:
+        return render_template("matrix_add.html", step=1, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
+    except Exception as e:
+        return render_template("matrix_add.html", step=1, error=f"Error al realizar la suma: {str(e)}")
+
+@app.route("/matrix_subtract", methods=["GET", "POST"])
+def matrix_subtract():
+    if request.method == "POST":
+        try:
+            rows = int(request.form["rows"])
+            cols = int(request.form["cols"])
+            if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                return render_template("matrix_subtract.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
+            return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols)
+        except ValueError:
+            return render_template("matrix_subtract.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+    return render_template("matrix_subtract.html", step=1)
+
+@app.route("/matrix_subtract_solve", methods=["POST"])
+def matrix_subtract_solve():
+    try:
+        rows = int(request.form["rows"])
+        cols = int(request.form["cols"])
+        matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        matrix_b = [[safe_fraction(request.form.get(f"B_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        result = ArOperations.subtractTwoMatrix(matrix_a, matrix_b)
+        return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b, result=result)
+    except ValueError as e:
+        return render_template("matrix_subtract.html", step=1, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
+    except Exception as e:
+        return render_template("matrix_subtract.html", step=1, error=f"Error al realizar la resta: {str(e)}")
+
+@app.route("/matrix_scalar", methods=["GET", "POST"])
+def matrix_scalar():
+    if request.method == "POST":
+        try:
+            rows = int(request.form["rows"])
+            cols = int(request.form["cols"])
+            if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                return render_template("matrix_scalar.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
+            return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols)
+        except ValueError:
+            return render_template("matrix_scalar.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+    return render_template("matrix_scalar.html", step=1)
+
+@app.route("/matrix_scalar_solve", methods=["POST"])
+def matrix_scalar_solve():
+    try:
+        rows = int(request.form["rows"])
+        cols = int(request.form["cols"])
+        scalar = safe_fraction(request.form.get("scalar"))
+        matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        result = ArOperations.multiplyMatrixByScalar(matrix_a, scalar)
+        return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols, scalar=scalar, matrix_a=matrix_a, result=result)
+    except ValueError as e:
+        return render_template("matrix_scalar.html", step=1, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
+    except Exception as e:
+        return render_template("matrix_scalar.html", step=1, error=f"Error al realizar la multiplicación por escalar: {str(e)}")
+
+@app.route("/matrix_multiply", methods=["GET", "POST"])
+def matrix_multiply():
+    if request.method == "POST":
+        try:
+            rows_a = int(request.form["rows_a"])
+            cols_a = int(request.form["cols_a"])
+            rows_b = int(request.form["rows_b"])
+            cols_b = int(request.form["cols_b"])
+            if not (1 <= rows_a <= 10 and 1 <= cols_a <= 10 and 1 <= rows_b <= 10 and 1 <= cols_b <= 10):
+                return render_template("matrix_multiply.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
+            if cols_a != rows_b:
+                return render_template("matrix_multiply.html", step=1, error="Las columnas de A deben ser iguales a las filas de B.")
+            return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b)
+        except ValueError:
+            return render_template("matrix_multiply.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+    return render_template("matrix_multiply.html", step=1)
+
+@app.route("/matrix_multiply_solve", methods=["POST"])
+def matrix_multiply_solve():
+    try:
+        rows_a = int(request.form["rows_a"])
+        cols_a = int(request.form["cols_a"])
+        rows_b = int(request.form["rows_b"])
+        cols_b = int(request.form["cols_b"])
+        matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(cols_a)] for i in range(rows_a)]
+        matrix_b = [[safe_fraction(request.form.get(f"B_{i}_{j}")) for j in range(cols_b)] for i in range(rows_b)]
+        result = ArOperations.multiplyTwoMatrix(matrix_a, matrix_b)
+        return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, result=result)
+    except ValueError as e:
+        return render_template("matrix_multiply.html", step=1, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
+    except Exception as e:
+        return render_template("matrix_multiply.html", step=1, error=f"Error al realizar la multiplicación: {str(e)}")
+
+@app.route("/matrix_transpose", methods=["GET", "POST"])
+def matrix_transpose():
+    if request.method == "POST":
+        try:
+            rows = int(request.form["rows"])
+            cols = int(request.form["cols"])
+            if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                return render_template("matrix_transpose.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
+            return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols)
+        except ValueError:
+            return render_template("matrix_transpose.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+    return render_template("matrix_transpose.html", step=1)
+
+@app.route("/matrix_transpose_solve", methods=["POST"])
+def matrix_transpose_solve():
+    try:
+        rows = int(request.form["rows"])
+        cols = int(request.form["cols"])
+        matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(cols)] for i in range(rows)]
+        result = ArOperations.transposeMatrix(matrix_a)
+        return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, result=result)
+    except ValueError as e:
+        return render_template("matrix_transpose.html", step=1, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
+    except Exception as e:
+        return render_template("matrix_transpose.html", step=1, error=f"Error al realizar la transposición: {str(e)}")
 
 if __name__ == "__main__":
     app.run(debug=True)

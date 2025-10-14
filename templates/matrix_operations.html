@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+     <html lang="es">
+     <head>
+         <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>Operaciones Aritméticas con Matrices</title>
+         <style>
+             * {
+                 margin: 0;
+                 padding: 0;
+                 box-sizing: border-box;
+             }
+
+             body {
+                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                 background: linear-gradient(135deg, #000000 0%, #000000 100%);
+                 min-height: 100vh;
+                 display: flex;
+                 align-items: center;
+                 justify-content: center;
+                 padding: 20px;
+             }
+
+             .container {
+                 background: white;
+                 border-radius: 20px;
+                 box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                 padding: 40px;
+                 max-width: 900px;
+                 width: 100%;
+                 animation: fadeIn 0.6s ease-out;
+                 text-align: center;
+             }
+
+             @keyframes fadeIn {
+                 from { opacity: 0; transform: translateY(30px); }
+                 to { opacity: 1; transform: translateY(0); }
+             }
+
+             h1 {
+                 color: #000000;
+                 margin-bottom: 20px;
+                 font-size: 2.5em;
+                 font-weight: 300;
+             }
+
+             p {
+                 color: #000000;
+                 font-size: 1.2em;
+                 margin-bottom: 30px;
+             }
+
+             ul {
+                 list-style: none;
+                 padding: 0;
+             }
+
+             li {
+                 margin: 15px 0;
+             }
+
+             a {
+                 background: linear-gradient(135deg, #000000, #000000);
+                 color: white;
+                 padding: 15px 30px;
+                 border-radius: 10px;
+                 font-size: 1.1em;
+                 font-weight: 500;
+                 text-decoration: none;
+                 display: inline-block;
+                 transition: all 0.3s ease;
+             }
+
+             a:hover {
+                 transform: translateY(-2px);
+                 box-shadow: 0 10px 20px rgba(184, 169, 217, 0.3);
+             }
+         </style>
+     </head>
+     <body>
+         <div class="container">
+             <h1>Operaciones Aritméticas con Matrices</h1>
+             <p>Elige una operación:</p>
+             <ul>
+                 <li><a href="{{ url_for('matrix_add') }}">Suma de Matrices</a></li>
+                 <li><a href="{{ url_for('matrix_subtract') }}">Resta de Matrices</a></li>
+                 <li><a href="{{ url_for('matrix_scalar') }}">Multiplicación por Escalar</a></li>
+                 <li><a href="{{ url_for('matrix_multiply') }}">Multiplicación de Matrices</a></li>
+                 <li><a href="{{ url_for('matrix_transpose') }}">Transposición de Matriz</a></li>
+             </ul>
+             <div style="margin-top: 2rem;">
+                 <a href="{{ url_for('home') }}">Volver al Menú Principal</a>
+             </div>
+         </div>
+     </body>
+     </html>
