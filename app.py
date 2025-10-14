@@ -534,11 +534,11 @@ def matrix_add_solve():
         matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(cols)] for i in range(rows)]
         matrix_b = [[safe_fraction(request.form.get(f"B_{i}_{j}")) for j in range(cols)] for i in range(rows)]
         result = ArOperations.addTwoMatrix(matrix_a, matrix_b)
-        return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b, result=result)
+        return render_template("matrix_add.html", step=3, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b, result=result)
     except ValueError as e:
-        return render_template("matrix_add.html", step=1, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
+        return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
-        return render_template("matrix_add.html", step=1, error=f"Error al realizar la suma: {str(e)}")
+        return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error al realizar la suma: {str(e)}")
 
 @app.route("/matrix_subtract", methods=["GET", "POST"])
 def matrix_subtract():
