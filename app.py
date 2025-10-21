@@ -80,11 +80,15 @@ def gauss_jordan_with_steps(A):
 
     def snapshot(desc):
         left, right = split_augmented(aug, n)
+        # formateo de ambos lados celda a celda
+        left_fmt  = [[fmt_num_local(v) for v in row] for row in left]
+        right_fmt = [[fmt_num_local(v) for v in row] for row in right]
+
         steps.append({
             "description": desc,
-            "matrix": [[fmt_num_local(v) for v in row] for row in left],
-            # tu viewer espera “results” por fila; convertimos cada fila de right a string compacto
-            "results": [" ".join(fmt_num_local(x) for x in row) for row in right]
+            "matrix": left_fmt,               # lado izquierdo como 2D
+            "right": right_fmt,               # ✅ lado derecho como 2D (NUEVO)
+            "results": [" ".join(row) for row in right_fmt]  # mantiene compatibilidad (si algún template antiguo usa 'results')
         })
 
     snapshot("Construcción de la matriz aumentada [A | I].")

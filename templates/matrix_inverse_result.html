@@ -113,11 +113,21 @@
             <div>
               {% for i in range(s.matrix|length) %}
                 <div class="row">
+                  {# Lado izquierdo #}
                   {% for j in range(s.matrix[i]|length) %}
                     <div class="cell">{{ s.matrix[i][j] }}</div>
                   {% endfor %}
+
                   <div class="sep">|</div>
-                  <div class="cell">{{ s.results[i] }}</div>
+
+                  {# Lado derecho: si viene como 2D (s.right), pinto celda a celda; si no, uso s.results[i] #}
+                  {% if s.right is defined %}
+                    {% for j in range(s.right[i]|length) %}
+                      <div class="cell">{{ s.right[i][j] }}</div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="cell">{{ s.results[i] }}</div>
+                  {% endif %}
                 </div>
               {% endfor %}
             </div>
