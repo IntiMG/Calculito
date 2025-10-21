@@ -794,64 +794,74 @@ def matrix_multiply_solve():
 @app.route("/matrix_transpose", methods=["GET", "POST"])
 def matrix_transpose():
     use_result = request.args.get('use_result')
-    if use_result and 'current_matrix' in session:
-        matrix_a_str = session['current_matrix']  # Strings de la sesión
-        matrix_a = string_to_fraction(matrix_a_str)  # ✅ Convertir a Fraction
-        rows = len(matrix_a)
-        cols = len(matrix_a[0])
-        
-        result, steps = ArOperations.transposeMatrixWithSteps(matrix_a)  # Ahora funciona
-        
-        # Lógica de verificación (necesita conversión también)
-        verification = None
-        if 'previous_op' in session:
-            if session['previous_op'] == 'add':
-                orig_a = string_to_fraction(session['original_a'])
-                orig_b = string_to_fraction(session['original_b'])
-                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
-                b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
-                sum_t, _ = ArOperations.addTwoMatrixWithSteps(a_t, b_t)
-                if fraction_to_string(sum_t) == fraction_to_string(result):
-                    verification = "Propiedad verificada: (A + B)^T = A^T + B^T"
-                else:
-                    verification = "Propiedad diferente de: (A + B)^T != A^T + B^T"
-            elif session['previous_op'] == 'subtract':
-                orig_a = string_to_fraction(session['original_a'])
-                orig_b = string_to_fraction(session['original_b'])
-                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
-                b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
-                sub_t, _ = ArOperations.subtractTwoMatrixWithSteps(a_t, b_t)
-                if fraction_to_string(sub_t) == fraction_to_string(result):
-                    verification = "Propiedad verificada: (A - B)^T = A^T - B^T"
-                else:
-                    verification = "Propiedad diferente de: (A - B)^T != A^T - B^T"
-            elif session['previous_op'] == 'scalar':
-                orig_a = string_to_fraction(session['original_a'])
-                k = Fraction(session['original_scalar'])
-                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
-                kt, _ = ArOperations.multiplyMatrixByScalarWithSteps(a_t, k)
-                if fraction_to_string(kt) == fraction_to_string(result):
-                    verification = f"Propiedad verificada: ({str(k)} A)^T = {str(k)} A^T"
-                else:
-                    verification = f"Propiedad diferente de: ({str(k)} A)^T != {str(k)} A^T"
-            elif session['previous_op'] == 'multiply':
-                orig_a = string_to_fraction(session['original_a'])
-                orig_b = string_to_fraction(session['original_b'])
-                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
-                b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
-                prod_t, _ = ArOperations.multiplyTwoMatrixWithSteps(b_t, a_t)
-                if fraction_to_string(prod_t) == fraction_to_string(result):
-                    verification = "Propiedad verificada: (A B)^T = B^T A^T"
-                else:
-                    verification = "Propiedad diferente de: (A B)^T != B^T A^T"
-        
-        session['current_matrix'] = fraction_to_string(result)
-        session['previous_op'] = 'transpose'
-        return render_template("matrix_transpose.html", step=3, rows=rows, cols=cols, 
-                             matrix_a=matrix_a_str, result=result, steps=steps, 
-                             verification=verification)
-    
-    # ... resto del código sin cambios
+    if request.method == "POST":
+        if use_result and 'current_matrix' in session:
+            matrix_a_str = session['current_matrix']  # Strings de la sesión
+            matrix_a = string_to_fraction(matrix_a_str)  # ✅ Convertir a Fraction
+            rows = len(matrix_a)
+            cols = len(matrix_a[0])
+            
+            result, steps = ArOperations.transposeMatrixWithSteps(matrix_a)
+            
+            # Lógica de verificación
+            verification = None
+            if 'previous_op' in session:
+                if session['previous_op'] == 'add':
+                    orig_a = string_to_fraction(session['original_a'])
+                    orig_b = string_to_fraction(session['original_b'])
+                    a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                    b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
+                    sum_t, _ = ArOperations.addTwoMatrixWithSteps(a_t, b_t)
+                    if fraction_to_string(sum_t) == fraction_to_string(result):
+                        verification = "Propiedad verificada: (A + B)^T = A^T + B^T"
+                    else:
+                        verification = "Propiedad diferente de: (A + B)^T != A^T + B^T"
+                elif session['previous_op'] == 'subtract':
+                    orig_a = string_to_fraction(session['original_a'])
+                    orig_b = string_to_fraction(session['original_b'])
+                    a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                    b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
+                    sub_t, _ = ArOperations.subtractTwoMatrixWithSteps(a_t, b_t)
+                    if fraction_to_string(sub_t) == fraction_to_string(result):
+                        verification = "Propiedad verificada: (A - B)^T = A^T - B^T"
+                    else:
+                        verification = "Propiedad diferente de: (A - B)^T != A^T - B^T"
+                elif session['previous_op'] == 'scalar':
+                    orig_a = string_to_fraction(session['original_a'])
+                    k = Fraction(session['original_scalar'])
+                    a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                    kt, _ = ArOperations.multiplyMatrixByScalarWithSteps(a_t, k)
+                    if fraction_to_string(kt) == fraction_to_string(result):
+                        verification = f"Propiedad verificada: ({str(k)} A)^T = {str(k)} A^T"
+                    else:
+                        verification = f"Propiedad diferente de: ({str(k)} A)^T != {str(k)} A^T"
+                elif session['previous_op'] == 'multiply':
+                    orig_a = string_to_fraction(session['original_a'])
+                    orig_b = string_to_fraction(session['original_b'])
+                    a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                    b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
+                    prod_t, _ = ArOperations.multiplyTwoMatrixWithSteps(b_t, a_t)
+                    if fraction_to_string(prod_t) == fraction_to_string(result):
+                        verification = "Propiedad verificada: (A B)^T = B^T A^T"
+                    else:
+                        verification = "Propiedad diferente de: (A B)^T != B^T A^T"
+            
+            session['current_matrix'] = fraction_to_string(result)
+            session['previous_op'] = 'transpose'
+            return render_template("matrix_transpose.html", step=3, rows=rows, cols=cols, 
+                                 matrix_a=matrix_a_str, result=result, steps=steps, 
+                                 verification=verification)
+        else:
+            # Procesar dimensiones del formulario (step 1 a step 2)
+            rows = int(request.form["rows"])
+            cols = int(request.form["cols"])
+            if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                return render_template("matrix_transpose.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
+            # Inicializar matrix_a como una lista vacía para que el template la llene
+            matrix_a = [[0 for _ in range(cols)] for _ in range(rows)]
+            return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a)
+    # Caso GET inicial
+    return render_template("matrix_transpose.html", step=1)
 
 @app.route("/matrix_transpose_solve", methods=["POST"])
 def matrix_transpose_solve():
@@ -863,7 +873,7 @@ def matrix_transpose_solve():
         session['current_matrix'] = fraction_to_string(result)
         session['previous_op'] = 'transpose'
         session['original_a'] = fraction_to_string(matrix_a)
-        # Add verification logic here as before, using fraction_to_string for comparisons
+        # Lógica de verificación
         verification = None
         if 'previous_op' in session:
             if session['previous_op'] == 'add':
@@ -877,24 +887,24 @@ def matrix_transpose_solve():
                 else:
                     verification = "Propiedad diferente de: (A + B)^T != A^T + B^T"
             elif session['previous_op'] == 'subtract':
-                a_t, _ = ArOperations.transposeMatrixWithSteps(session['original_a'])
-                b_t, _ = ArOperations.transposeMatrixWithSteps(session['original_b'])
+                a_t, _ = ArOperations.transposeMatrixWithSteps(string_to_fraction(session['original_a']))
+                b_t, _ = ArOperations.transposeMatrixWithSteps(string_to_fraction(session['original_b']))
                 sub_t, _ = ArOperations.subtractTwoMatrixWithSteps(a_t, b_t)
                 if fraction_to_string(sub_t) == fraction_to_string(result):
                     verification = "Propiedad verificada: (A - B)^T = A^T - B^T"
                 else:
                     verification = "Propiedad diferente de: (A - B)^T != A^T - B^T"
             elif session['previous_op'] == 'scalar':
-                a_t, _ = ArOperations.transposeMatrixWithSteps(session['original_a'])
-                k = Fraction(session['original_scalar'])  # Convert back to Fraction for calculation
+                a_t, _ = ArOperations.transposeMatrixWithSteps(string_to_fraction(session['original_a']))
+                k = Fraction(session['original_scalar'])
                 kt, _ = ArOperations.multiplyMatrixByScalarWithSteps(a_t, k)
                 if fraction_to_string(kt) == fraction_to_string(result):
                     verification = f"Propiedad verificada: ({str(k)} A)^T = {str(k)} A^T"
                 else:
                     verification = f"Propiedad diferente de: ({str(k)} A)^T != {str(k)} A^T"
             elif session['previous_op'] == 'multiply':
-                a_t, _ = ArOperations.transposeMatrixWithSteps(session['original_a'])
-                b_t, _ = ArOperations.transposeMatrixWithSteps(session['original_b'])
+                a_t, _ = ArOperations.transposeMatrixWithSteps(string_to_fraction(session['original_a']))
+                b_t, _ = ArOperations.transposeMatrixWithSteps(string_to_fraction(session['original_b']))
                 prod_t, _ = ArOperations.multiplyTwoMatrixWithSteps(b_t, a_t)
                 if fraction_to_string(prod_t) == fraction_to_string(result):
                     verification = "Propiedad verificada: (A B)^T = B^T A^T"
@@ -905,7 +915,6 @@ def matrix_transpose_solve():
         return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
         return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, error=f"Error al realizar la transposición: {str(e)}")
-
 # ========= Inversa por Gauss-Jordan =========
 @app.route("/matrix_inverse", methods=["GET", "POST"])
 def matrix_inverse():
