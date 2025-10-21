@@ -35,6 +35,121 @@ def safe_fraction(val):
         return Fraction(0)
     return Fraction(s)
 
+# ========= Helpers para Gauss-Jordan (sin NumPy) =========
+from copy import deepcopy
+
+def identity(n):
+    from fractions import Fraction
+    I = [[Fraction(0) for _ in range(n)] for __ in range(n)]
+    for i in range(n):
+        I[i][i] = Fraction(1)
+    return I
+
+def augmented(A, B):
+    return [rowA + rowB for rowA, rowB in zip(A, B)]
+
+def split_augmented(M, ncols_left):
+    left = [row[:ncols_left] for row in M]
+    right = [row[ncols_left:] for row in M]
+    return left, right
+
+def is_identity(M):
+    from fractions import Fraction
+    n = len(M)
+    for i in range(n):
+        for j in range(n):
+            if M[i][j] != (Fraction(1) if i == j else Fraction(0)):
+                return False
+    return True
+
+def gauss_jordan_with_steps(A):
+    """
+    Aplica Gauss-Jordan a [A | I]. Devuelve:
+      ok, steps, left, right, pivots, rank, reason
+    steps: lista de dicts con 'description', 'matrix' (lado A), 'results' (lado I/A⁻¹) para que tu UI lo muestre como [A|B]
+    """
+    from fractions import Fraction
+    n = len(A)
+    I = identity(n)
+    aug = augmented(deepcopy(A), I)
+    steps = []
+
+    def fmt_num_local(x):
+        # usa tu mismo criterio visual
+        return jinja_fmt_num(x) if callable(jinja_fmt_num) else str(x)
+
+    def snapshot(desc):
+        left, right = split_augmented(aug, n)
+        steps.append({
+            "description": desc,
+            "matrix": [[fmt_num_local(v) for v in row] for row in left],
+            # tu viewer espera “results” por fila; convertimos cada fila de right a string compacto
+            "results": [" ".join(fmt_num_local(x) for x in row) for row in right]
+        })
+
+    snapshot("Construcción de la matriz aumentada [A | I].")
+
+    row = 0
+    pivots = []
+    for col in range(n):
+        pivot = None
+        for r in range(row, n):
+            if aug[r][col] != 0:
+                pivot = r
+                break
+        if pivot is None:
+            continue
+
+        if pivot != row:
+            aug[row], aug[pivot] = aug[pivot], aug[row]
+            snapshot(f"Intercambiar R{row+1} ↔ R{pivot+1}")
+
+        pv = aug[row][col]
+        if pv != 1:
+            for j in range(2*n):
+                aug[row][j] /= pv
+            snapshot(f"Escalar R{row+1} ← R{row+1} / {fmt_num_local(pv)}")
+
+        for r in range(n):
+            if r != row and aug[r][col] != 0:
+                factor = aug[r][col]
+                for j in range(2*n):
+                    aug[r][j] -= factor * aug[row][j]
+                snapshot(f"R{r+1} ← R{r+1} - ({fmt_num_local(factor)})·R{row+1}")
+
+        pivots.append((row, col))
+        row += 1
+        if row == n:
+            break
+
+    rank = len(pivots)
+    left, right = split_augmented(aug, n)
+
+    if not is_identity(left):
+        reason = "La matriz no es invertible porque no tiene pivote en cada fila."
+        snapshot("No se logró obtener I en el lado izquierdo; A no es invertible.")
+        return False, steps, left, right, pivots, rank, reason
+
+    snapshot("Se obtuvo [I | A⁻¹]. La matriz derecha es A⁻¹.")
+    return True, steps, left, right, pivots, rank, ""
+
+def props_invertibilidad(n, rank):
+    """
+    Verifica (c)(d)(e) y devuelve banderas + interpretación corta.
+    """
+    interp = {
+        "c": "Si A tiene n pivotes, entonces A es invertible.",
+        "d": "Si A x = 0 solo tiene la solución trivial, entonces A⁻¹ existe.",
+        "e": "Si las columnas son linealmente independientes, entonces A es invertible."
+    }
+    ok = (rank == n)
+    return {
+        "c": {"ok": ok, "text": interp["c"]},
+        "d": {"ok": ok, "text": interp["d"]},
+        "e": {"ok": ok, "text": interp["e"]},
+    }
+
+
 @app.template_filter("fmt_num")
 def jinja_fmt_num(x):
     return _fmt_num(x)
@@ -42,6 +157,7 @@ def jinja_fmt_num(x):
 @app.template_filter("fmt_vec")
 def jinja_fmt_vec(vec):
     return "[" + ", ".join(_fmt_num(v) for v in vec) + "]"
+
 
 # ========= Rutas Existentes =========
 @app.route("/", methods=["GET"])
@@ -785,7 +901,48 @@ def matrix_transpose_solve():
         return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
         return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, error=f"Error al realizar la transposición: {str(e)}")
-    
+
+# ========= Inversa por Gauss-Jordan =========
+@app.route("/matrix_inverse", methods=["GET", "POST"])
+def matrix_inverse():
+    if request.method == "GET":
+        return render_template("matrix_inverse.html", step=1)
+    # POST (step 1) → pide n y pasa a step 2
+    try:
+        n = int(request.form.get("n"))
+        if not (1 <= n <= 10):
+            raise ValueError()
+    except:
+        return render_template("matrix_inverse.html", step=1, error="Dimensión inválida (1–10).")
+    return render_template("matrix_inverse.html", step=2, n=n)
+
+@app.route("/matrix_inverse_solve", methods=["POST"])
+def matrix_inverse_solve():
+    try:
+        n = int(request.form.get("n"))
+        A = [[safe_fraction(request.form.get(f"A_{i}_{j}")) for j in range(n)] for i in range(n)]
+    except Exception:
+        return render_template("matrix_inverse.html", step=2, n=request.form.get("n"),
+                               error="Entrada inválida. Acepta enteros, decimales o fracciones a/b.")
+
+    ok, steps, left, right, pivots, rank, reason = gauss_jordan_with_steps(A)
+    props = props_invertibilidad(n, rank)
+
+    if not ok:
+        return render_template(
+            "matrix_inverse_result.html",
+            invertible=False, reason=reason, n=n, A=A,
+            steps=steps, rank=rank, pivots=pivots, props=props
+        )
+
+    Ainv = right
+    return render_template(
+        "matrix_inverse_result.html",
+        invertible=True, n=n, A=A, Ainv=Ainv,
+        steps=steps, rank=rank, pivots=pivots, props=props
+    )
+
+
 def fraction_to_string(matrix):
     if isinstance(matrix, list):
         return [fraction_to_string(row) for row in matrix]
