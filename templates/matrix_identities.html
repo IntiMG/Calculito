@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Identidades de Matrices</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Identidades de Matrices</h1>
+    <p>Elige cuántas matrices usar, ingresa tamaños y valores, y luego verifica una identidad con paso a paso.</p>
+  </div>
+
+  {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+
+  {% if step == 1 %}
+    <div class="card">
+      <div class="step-indicator">
+        <div class="step active">1</div><div class="step">2</div><div class="step">3</div>
+      </div>
+      <form method="post">
+        <input type="hidden" name="stage" value="1">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label"># de matrices</label>
+            <select class="form-input" name="num_mats">
+              <option value="2">2 (A y B)</option>
+              <option value="3">3 (A, B y C)</option>
+            </select>
+          </div>
+        </div>
+
+        <h3 style="margin:.5rem 0">Tamaños</h3>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">A: filas</label><input class="form-input" type="number" name="Ar" min="1" max="10" value="2"></div>
+          <div class="form-group"><label class="form-label">A: cols</label><input class="form-input" type="number" name="Ac" min="1" max="10" value="2"></div>
+          <div class="form-group"><label class="form-label">B: filas</label><input class="form-input" type="number" name="Br" min="1" max="10" value="2"></div>
+          <div class="form-group"><label class="form-label">B: cols</label><input class="form-input" type="number" name="Bc" min="1" max="10" value="2"></div>
+          <div class="form-group"><label class="form-label">C: filas</label><input class="form-input" type="number" name="Cr" min="1" max="10" value="2"></div>
+          <div class="form-group"><label class="form-label">C: cols</label><input class="form-input" type="number" name="Cc" min="1" max="10" value="2"></div>
+        </div>
+
+        <div class="btn-group"><button class="btn btn-primary" type="submit">Continuar</button></div>
+      </form>
+      <div class="btn-group" style="margin-top:1rem;">
+        <a href="{{ url_for('matrix_operations') }}" class="btn btn-secondary">Volver a Operaciones</a>
+      </div>
+    </div>
+
+  {% elif step == 2 %}
+    <div class="card">
+      <div class="step-indicator">
+        <div class="step completed">1</div><div class="step active">2</div><div class="step">3</div>
+      </div>
+      <form method="post">
+        <input type="hidden" name="stage" value="2">
+        <input type="hidden" name="num_mats" value="{{ num_mats }}">
+        <input type="hidden" name="dims_A" value="{{ dims['A'] }}">
+        <input type="hidden" name="dims_B" value="{{ dims['B'] }}">
+        {% if 'C' in dims %}<input type="hidden" name="dims_C" value="{{ dims['C'] }}">{% endif %}
+
+        <div class="matrix-container">
+          <h3>Matriz A ({{ dims['A'][0] }}×{{ dims['A'][1] }})</h3>
+          <table class="matrix-table">
+            {% for i in range(dims['A'][0]) %}
+            <tr>
+              {% for j in range(dims['A'][1]) %}
+              <td><input class="matrix-cell" name="A_{{i}}_{{j}}" placeholder="0"></td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </table>
+
+          <h3 style="margin-top:1rem;">Matriz B ({{ dims['B'][0] }}×{{ dims['B'][1] }})</h3>
+          <table class="matrix-table">
+            {% for i in range(dims['B'][0]) %}
+            <tr>
+              {% for j in range(dims['B'][1]) %}
+              <td><input class="matrix-cell" name="B_{{i}}_{{j}}" placeholder="0"></td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </table>
+
+          {% if 'C' in dims %}
+          <h3 style="margin-top:1rem;">Matriz C ({{ dims['C'][0] }}×{{ dims['C'][1] }})</h3>
+          <table class="matrix-table">
+            {% for i in range(dims['C'][0]) %}
+            <tr>
+              {% for j in range(dims['C'][1]) %}
+              <td><input class="matrix-cell" name="C_{{i}}_{{j}}" placeholder="0"></td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </table>
+          {% endif %}
+
+          <div class="form-row" style="margin-top:1rem;">
+            <div class="form-group"><label class="form-label">Escalar r</label><input class="form-input" name="r" value="1"></div>
+            <div class="form-group"><label class="form-label">Escalar s</label><input class="form-input" name="s" value="1"></div>
+          </div>
+        </div>
+
+        <div class="btn-group"><button class="btn btn-primary" type="submit">Ver propiedades válidas</button></div>
+      </form>
+    </div>
+
+  {% elif step == 3 %}
+    <div class="card">
+      <div class="step-indicator">
+        <div class="step completed">1</div><div class="step completed">2</div><div class="step active">3</div>
+      </div>
+
+      {% if not valid_props %}
+        <div class="error-message">No hay identidades compatibles con estas dimensiones.</div>
+      {% else %}
+        <form method="post" action="{{ url_for('matrix_identities_verify') }}">
+          <div class="form-group">
+            <label class="form-label">Selecciona una identidad:</label>
+            <select class="form-input" name="kind">
+              {% for k, label in valid_props %}
+                <option value="{{ k }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="btn-group"><button class="btn btn-primary" type="submit">Verificar paso a paso</button></div>
+        </form>
+      {% endif %}
+
+      <div class="btn-group" style="margin-top:1rem;">
+        <a class="btn btn-secondary" href="{{ url_for('matrix_identities') }}">Nueva verificación</a>
+        <a class="btn btn-secondary" href="{{ url_for('matrix_operations') }}">Volver a Operaciones</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

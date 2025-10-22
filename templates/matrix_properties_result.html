@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Resultado Propiedad</title>
+</head>
+<body>
+  <h2>Resultado de la propiedad: {{ kind }}</h2>
+
+  {% if error %}
+    <p style="color:red">{{ error }}</p>
+  {% else %}
+    <h3>{% if valid %}✅ Se cumple la igualdad{% else %}❌ No se cumple{% endif %}</h3>
+
+    <div>
+      <h4>Lado Izquierdo (LHS)</h4>
+      {% for step in lhs_steps %}
+        <p><b>{{ step.title }}</b></p>
+        {% for m in step.matrices %}
+          <p>{{ m.label }} = {{ m.matrix }}</p>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <div>
+      <h4>Lado Derecho (RHS)</h4>
+      {% for step in rhs_steps %}
+        <p><b>{{ step.title }}</b></p>
+        {% for m in step.matrices %}
+          <p>{{ m.label }} = {{ m.matrix }}</p>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <p><b>¿Iguales?:</b> {{ valid }}</p>
+  {% endif %}
+
+  <br>
+  <a href="/matrix_properties">Volver</a>
+</body>
+</html>

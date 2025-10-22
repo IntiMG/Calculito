@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Resultado Identidad</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    .step-matrix{margin:.5rem 0}
+    .step-matrix h4{margin:.25rem 0}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;}
+    .box{background:#fff;padding:.5rem;border:1px solid #ddd;border-radius:8px;display:inline-block}
+    .eq{font-weight:600;margin:.25rem 0}
+    table.mini td{border:1px solid #000;padding:.25rem .4rem}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Identidad: {{ label }}</h1>
+    <p>Comparación lado izquierdo (LHS) vs lado derecho (RHS), con pasos.</p>
+  </div>
+
+  {% if error %}
+    <div class="error-message">{{ error }}</div>
+  {% else %}
+    <div class="card">
+      <div class="solution-container">
+        <div class="solution-title">Resultado</div>
+        <ul class="solution-list">
+          <li class="solution-item">
+            <span class="variable-name">¿Se cumple?</span>
+            <span class="variable-value">{% if valid %}Sí ✅{% else %}No ❌{% endif %}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="solution-container">
+        <div class="solution-title">Lado Izquierdo (LHS)</div>
+        {% for s in lhs_steps %}
+          <div class="step-item">
+            <div class="step-description">{{ s.title }}</div>
+            {% for m in s.matrices %}
+              <div class="step-matrix">
+                <div class="mono">{{ m.label }}</div>
+                <div class="box">
+                  <table class="mini">
+                    {% for r in m.matrix %}
+                      <tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>
+                    {% endfor %}
+                  </table>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="solution-container">
+        <div class="solution-title">Lado Derecho (RHS)</div>
+        {% for s in rhs_steps %}
+          <div class="step-item">
+            <div class="step-description">{{ s.title }}</div>
+            {% for m in s.matrices %}
+              <div class="step-matrix">
+                <div class="mono">{{ m.label }}</div>
+                <div class="box">
+                  <table class="mini">
+                    {% for r in m.matrix %}
+                      <tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>
+                    {% endfor %}
+                  </table>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="btn-group">
+    <a class="btn btn-secondary" href="{{ url_for('matrix_identities') }}">Nueva verificación</a>
+    <a class="btn btn-secondary" href="{{ url_for('matrix_operations') }}">Volver a Operaciones</a>
+  </div>
+</div>
+</body>
+</html>

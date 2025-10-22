@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Verificar Propiedades de Matrices</title>
+</head>
+<body>
+  <h2>Verificación de Propiedades</h2>
+  <form method="POST" action="/matrix_properties">
+    <label>Propiedad:</label>
+    <select name="kind">
+      <option value="sum_comm">Conmutativa de la Suma</option>
+      <option value="sum_assoc">Asociativa de la Suma</option>
+      <option value="sum_zero">Elemento Neutro</option>
+      <option value="dist_scalar_left">Distributiva Escalar Izq</option>
+      <option value="scalar_assoc">Asociativa del Escalar</option>
+      <option value="mul_assoc">Asociativa del Producto</option>
+      <option value="mul_dist_left">Distributiva Izquierda</option>
+      <option value="mul_dist_right">Distributiva Derecha</option>
+      <option value="t_sum">(A+B)<sup>T</sup> = A<sup>T</sup> + B<sup>T</sup></option>
+      <option value="t_prod">(AB)<sup>T</sup> = B<sup>T</sup>A<sup>T</sup></option>
+    </select>
+    <br><br>
+
+    <h4>Matriz A</h4>
+    {% for i in range(2) %}
+      {% for j in range(2) %}
+        <input type="text" name="A_{{i}}_{{j}}" size="3">
+      {% endfor %}<br>
+    {% endfor %}
+
+    <h4>Matriz B</h4>
+    {% for i in range(2) %}
+      {% for j in range(2) %}
+        <input type="text" name="B_{{i}}_{{j}}" size="3">
+      {% endfor %}<br>
+    {% endfor %}
+
+    <h4>Matriz C</h4>
+    {% for i in range(2) %}
+      {% for j in range(2) %}
+        <input type="text" name="C_{{i}}_{{j}}" size="3">
+      {% endfor %}<br>
+    {% endfor %}
+
+    <label>r:</label> <input type="text" name="r" size="4" value="1">
+    <label>s:</label> <input type="text" name="s" size="4" value="1"><br><br>
+
+    <button type="submit">Verificar Propiedad</button>
+  </form>
+
+  {% if error %}
+    <p style="color:red">{{ error }}</p>
+  {% endif %}
+</body>
+</html>
