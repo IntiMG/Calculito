@@ -1111,20 +1111,31 @@ def matrix_operations():
 @app.route("/matrix_add", methods=["GET", "POST"])
 def matrix_add():
     use_result = request.args.get('use_result')
-    if use_result and 'current_matrix' in session:
-        matrix_a = session['current_matrix']
-        rows = len(matrix_a)
-        cols = len(matrix_a[0])
-        return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, using_result=True)
     if request.method == "POST":
-        try:
+        if use_result and 'current_matrix' in session:
+            matrix_a_str = session['current_matrix']
+            matrix_a = string_to_fraction(matrix_a_str)
+            rows = len(matrix_a)
+            cols = len(matrix_a[0])
+            # Inicializar matrix_b como ceros para que el usuario los edite
+            matrix_b = [[0 for _ in range(cols)] for _ in range(rows)]
+            return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a_str, matrix_b=matrix_b, using_result=True)
+        else:
             rows = int(request.form["rows"])
             cols = int(request.form["cols"])
             if not (1 <= rows <= 10 and 1 <= cols <= 10):
                 return render_template("matrix_add.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
-            return render_template("matrix_add.html", step=2, rows=rows, cols=cols)
-        except ValueError:
-            return render_template("matrix_add.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+            matrix_a = [[0 for _ in range(cols)] for _ in range(rows)]
+            matrix_b = [[0 for _ in range(cols)] for _ in range(rows)]
+            return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b)
+    elif use_result and 'current_matrix' in session:
+        # Mostrar step=2 para ingresar matrix_b
+        matrix_a_str = session['current_matrix']
+        matrix_a = string_to_fraction(matrix_a_str)
+        rows = len(matrix_a)
+        cols = len(matrix_a[0])
+        matrix_b = [[0 for _ in range(cols)] for _ in range(rows)]
+        return render_template("matrix_add.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a_str, matrix_b=matrix_b, using_result=True)
     return render_template("matrix_add.html", step=1)
 
 @app.route("/matrix_add_solve", methods=["POST"])
@@ -1149,20 +1160,29 @@ def matrix_add_solve():
 @app.route("/matrix_subtract", methods=["GET", "POST"])
 def matrix_subtract():
     use_result = request.args.get('use_result')
-    if use_result and 'current_matrix' in session:
-        matrix_a = session['current_matrix']
-        rows = len(matrix_a)
-        cols = len(matrix_a[0])
-        return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, using_result=True)
     if request.method == "POST":
-        try:
+        if use_result and 'current_matrix' in session:
+            matrix_a_str = session['current_matrix']
+            matrix_a = string_to_fraction(matrix_a_str)
+            rows = len(matrix_a)
+            cols = len(matrix_a[0])
+            matrix_b = [[0 for _ in range(cols)] for _ in range(rows)]
+            return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a_str, matrix_b=matrix_b, using_result=True)
+        else:
             rows = int(request.form["rows"])
             cols = int(request.form["cols"])
             if not (1 <= rows <= 10 and 1 <= cols <= 10):
                 return render_template("matrix_subtract.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
-            return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols)
-        except ValueError:
-            return render_template("matrix_subtract.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+            matrix_a = [[0 for _ in range(cols)] for _ in range(rows)]
+            matrix_b = [[0 for _ in range(cols)] for _ in range(rows)]
+            return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, matrix_b=matrix_b)
+    elif use_result and 'current_matrix' in session:
+        matrix_a_str = session['current_matrix']
+        matrix_a = string_to_fraction(matrix_a_str)
+        rows = len(matrix_a)
+        cols = len(matrix_a[0])
+        matrix_b = [[0 for _ in range(cols)] for _ in range(rows)]
+        return render_template("matrix_subtract.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a_str, matrix_b=matrix_b, using_result=True)
     return render_template("matrix_subtract.html", step=1)
 
 @app.route("/matrix_subtract_solve", methods=["POST"])
@@ -1186,20 +1206,26 @@ def matrix_subtract_solve():
 @app.route("/matrix_scalar", methods=["GET", "POST"])
 def matrix_scalar():
     use_result = request.args.get('use_result')
-    if use_result and 'current_matrix' in session:
-        matrix_a = session['current_matrix']
-        rows = len(matrix_a)
-        cols = len(matrix_a[0])
-        return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, using_result=True)
     if request.method == "POST":
-        try:
+        if use_result and 'current_matrix' in session:
+            matrix_a_str = session['current_matrix']
+            matrix_a = string_to_fraction(matrix_a_str)
+            rows = len(matrix_a)
+            cols = len(matrix_a[0])
+            return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a_str, using_result=True)
+        else:
             rows = int(request.form["rows"])
             cols = int(request.form["cols"])
             if not (1 <= rows <= 10 and 1 <= cols <= 10):
                 return render_template("matrix_scalar.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
-            return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols)
-        except ValueError:
-            return render_template("matrix_scalar.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+            matrix_a = [[0 for _ in range(cols)] for _ in range(rows)]
+            return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a)
+    elif use_result and 'current_matrix' in session:
+        matrix_a_str = session['current_matrix']
+        matrix_a = string_to_fraction(matrix_a_str)
+        rows = len(matrix_a)
+        cols = len(matrix_a[0])
+        return render_template("matrix_scalar.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a_str, using_result=True)
     return render_template("matrix_scalar.html", step=1)
 
 @app.route("/matrix_scalar_solve", methods=["POST"])
@@ -1223,14 +1249,22 @@ def matrix_scalar_solve():
 @app.route("/matrix_multiply", methods=["GET", "POST"])
 def matrix_multiply():
     use_result = request.args.get('use_result')
-    if use_result and 'current_matrix' in session:
-        matrix_a = session['current_matrix']  # Esto es una lista de strings
-        rows_a = len(matrix_a)
-        cols_a = len(matrix_a[0]) if matrix_a else 0
-        # Solicitar al usuario las dimensiones de la segunda matriz
-        return render_template("matrix_multiply.html", step=1, rows_a=rows_a, cols_a=cols_a, using_result=True)
     if request.method == "POST":
-        try:
+        if use_result and 'current_matrix' in session:
+            matrix_a_str = session['current_matrix']
+            matrix_a = string_to_fraction(matrix_a_str)
+            rows_a = len(matrix_a)
+            cols_a = len(matrix_a[0])
+            # Obtener rows_b y cols_b del formulario para matrix_b
+            rows_b = int(request.form["rows_b"])
+            cols_b = int(request.form["cols_b"])
+            if not (1 <= rows_b <= 10 and 1 <= cols_b <= 10):
+                return render_template("matrix_multiply.html", step=1, rows_a=rows_a, cols_a=cols_a, error="Las dimensiones de B deben estar entre 1 y 10.", using_result=True)
+            if cols_a != rows_b:
+                return render_template("matrix_multiply.html", step=1, rows_a=rows_a, cols_a=cols_a, error="Las columnas de A deben ser iguales a las filas de B.", using_result=True)
+            matrix_b = [[0 for _ in range(cols_b)] for _ in range(rows_b)]
+            return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a_str, matrix_b=matrix_b, using_result=True)
+        else:
             rows_a = int(request.form["rows_a"])
             cols_a = int(request.form["cols_a"])
             rows_b = int(request.form["rows_b"])
@@ -1239,9 +1273,20 @@ def matrix_multiply():
                 return render_template("matrix_multiply.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
             if cols_a != rows_b:
                 return render_template("matrix_multiply.html", step=1, error="Las columnas de A deben ser iguales a las filas de B.")
-            return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b)
-        except ValueError:
-            return render_template("matrix_multiply.html", step=1, error="Por favor, ingrese dimensiones válidas.")
+            matrix_a = [[0 for _ in range(cols_a)] for _ in range(rows_a)]
+            matrix_b = [[0 for _ in range(cols_b)] for _ in range(rows_b)]
+            return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b)
+    elif use_result and 'current_matrix' in session:
+        # Mostrar step=2 para ingresar matrix_b con dimensiones compatibles
+        matrix_a_str = session['current_matrix']
+        matrix_a = string_to_fraction(matrix_a_str)
+        rows_a = len(matrix_a)
+        cols_a = len(matrix_a[0])
+        # Inicializar con dimensiones predeterminadas para matrix_b (compatibles con cols_a)
+        rows_b = cols_a  # Filas de B deben igualar columnas de A
+        cols_b = 2  # Valor predeterminado, el usuario puede ajustarlo en step=1 si es necesario
+        matrix_b = [[0 for _ in range(cols_b)] for _ in range(rows_b)]
+        return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a_str, matrix_b=matrix_b, using_result=True)
     return render_template("matrix_multiply.html", step=1)
 
 @app.route("/matrix_multiply_solve", methods=["POST"])
@@ -1254,7 +1299,6 @@ def matrix_multiply_solve():
         matrix_a = [[safe_fraction(request.form.get(f"A_{i}_{j}", 0)) for j in range(cols_a)] for i in range(rows_a)]
         matrix_b = [[safe_fraction(request.form.get(f"B_{i}_{j}", 0)) for j in range(cols_b)] for i in range(rows_b)]
         result, steps = ArOperations.multiplyTwoMatrixWithSteps(matrix_a, matrix_b)
-        # Convertir el resultado y las matrices originales a cadenas antes de almacenar en la sesión
         session['current_matrix'] = fraction_to_string(result)
         session['previous_op'] = 'multiply'
         session['original_a'] = fraction_to_string(matrix_a)
@@ -1264,20 +1308,16 @@ def matrix_multiply_solve():
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error al realizar la multiplicación: {str(e)}")
-    
 @app.route("/matrix_transpose", methods=["GET", "POST"])
 def matrix_transpose():
     use_result = request.args.get('use_result')
     if request.method == "POST":
         if use_result and 'current_matrix' in session:
-            matrix_a_str = session['current_matrix']  # Strings de la sesión
-            matrix_a = string_to_fraction(matrix_a_str)  # ✅ Convertir a Fraction
+            matrix_a_str = session['current_matrix']
+            matrix_a = string_to_fraction(matrix_a_str)
             rows = len(matrix_a)
             cols = len(matrix_a[0])
-            
             result, steps = ArOperations.transposeMatrixWithSteps(matrix_a)
-            
-            # Lógica de verificación
             verification = None
             if 'previous_op' in session:
                 if session['previous_op'] == 'add':
@@ -1319,24 +1359,73 @@ def matrix_transpose():
                         verification = "Propiedad verificada: (A B)^T = B^T A^T"
                     else:
                         verification = "Propiedad diferente de: (A B)^T != B^T A^T"
-            
             session['current_matrix'] = fraction_to_string(result)
             session['previous_op'] = 'transpose'
             return render_template("matrix_transpose.html", step=3, rows=rows, cols=cols, 
                                  matrix_a=matrix_a_str, result=result, steps=steps, 
                                  verification=verification)
         else:
-            # Procesar dimensiones del formulario (step 1 a step 2)
             rows = int(request.form["rows"])
             cols = int(request.form["cols"])
             if not (1 <= rows <= 10 and 1 <= cols <= 10):
                 return render_template("matrix_transpose.html", step=1, error="Las dimensiones deben estar entre 1 y 10.")
-            # Inicializar matrix_a como una lista vacía para que el template la llene
             matrix_a = [[0 for _ in range(cols)] for _ in range(rows)]
             return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a)
-    # Caso GET inicial
+    elif use_result and 'current_matrix' in session:
+        matrix_a_str = session['current_matrix']
+        matrix_a = string_to_fraction(matrix_a_str)
+        rows = len(matrix_a)
+        cols = len(matrix_a[0])
+        result, steps = ArOperations.transposeMatrixWithSteps(matrix_a)
+        verification = None
+        if 'previous_op' in session:
+            if session['previous_op'] == 'add':
+                orig_a = string_to_fraction(session['original_a'])
+                orig_b = string_to_fraction(session['original_b'])
+                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
+                sum_t, _ = ArOperations.addTwoMatrixWithSteps(a_t, b_t)
+                if fraction_to_string(sum_t) == fraction_to_string(result):
+                    verification = "Propiedad verificada: (A + B)^T = A^T + B^T"
+                else:
+                    verification = "Propiedad diferente de: (A + B)^T != A^T + B^T"
+            elif session['previous_op'] == 'subtract':
+                orig_a = string_to_fraction(session['original_a'])
+                orig_b = string_to_fraction(session['original_b'])
+                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
+                sub_t, _ = ArOperations.subtractTwoMatrixWithSteps(a_t, b_t)
+                if fraction_to_string(sub_t) == fraction_to_string(result):
+                    verification = "Propiedad verificada: (A - B)^T = A^T - B^T"
+                else:
+                    verification = "Propiedad diferente de: (A - B)^T != A^T - B^T"
+            elif session['previous_op'] == 'scalar':
+                orig_a = string_to_fraction(session['original_a'])
+                k = Fraction(session['original_scalar'])
+                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                kt, _ = ArOperations.multiplyMatrixByScalarWithSteps(a_t, k)
+                if fraction_to_string(kt) == fraction_to_string(result):
+                    verification = f"Propiedad verificada: ({str(k)} A)^T = {str(k)} A^T"
+                else:
+                    verification = f"Propiedad diferente de: ({str(k)} A)^T != {str(k)} A^T"
+            elif session['previous_op'] == 'multiply':
+                orig_a = string_to_fraction(session['original_a'])
+                orig_b = string_to_fraction(session['original_b'])
+                a_t, _ = ArOperations.transposeMatrixWithSteps(orig_a)
+                b_t, _ = ArOperations.transposeMatrixWithSteps(orig_b)
+                prod_t, _ = ArOperations.multiplyTwoMatrixWithSteps(b_t, a_t)
+                if fraction_to_string(prod_t) == fraction_to_string(result):
+                    verification = "Propiedad verificada: (A B)^T = B^T A^T"
+                else:
+                    verification = "Propiedad diferente de: (A B)^T != B^T A^T"
+        session['current_matrix'] = fraction_to_string(result)
+        session['previous_op'] = 'transpose'
+        return render_template("matrix_transpose.html", step=3, rows=rows, cols=cols, 
+                             matrix_a=matrix_a_str, result=result, steps=steps, 
+                             verification=verification)
     return render_template("matrix_transpose.html", step=1)
 
+# Mantén /matrix_transpose_solve como está, ya que no se usa directamente para use_result
 @app.route("/matrix_transpose_solve", methods=["POST"])
 def matrix_transpose_solve():
     try:
