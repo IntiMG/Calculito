@@ -155,6 +155,480 @@ def props_invertibilidad(n, rank):
     }
 
 
+# ========= Propiedades de matrices (verificación paso a paso) =========
+def zeros_mat(m, n):
+    return [[Fraction(0) for _ in range(n)] for __ in range(m)]
+
+def identity_mat(n):
+    I = [[Fraction(0) for _ in range(n)] for __ in range(n)]
+    for i in range(n):
+        I[i][i] = Fraction(1)
+    return I
+
+def as_text_matrix(M):
+    # Convierte cada entrada con tu fmt para mostrar bonito en el template
+    return [[_fmt_num(x) for x in row] for row in M]
+
+def matrices_equal(A, B):
+    if A is None or B is None:
+        return False
+    if len(A) != len(B) or len(A[0]) != len(B[0]):
+        return False
+    for i in range(len(A)):
+        for j in range(len(A[0])):
+            if A[i][j] != B[i][j]:
+                return False
+    return True
+
+def _snap(title, *named_mats):
+    """
+    Crea un bloque de pasos para el template.
+    named_mats: tuplas (label, matrix)
+    """
+    pack = []
+    for label, M in named_mats:
+        pack.append({"label": label, "matrix": as_text_matrix(M)})
+    return {"title": title, "matrices": pack}
+
+def verify_identity(kind, ctx):
+    """
+    kind: clave de la propiedad
+    ctx:  {A,B,C,r,s}  (matrices como listas de Fraction, escalares Fraction)
+    Devuelve: dict con lhs_steps, rhs_steps, lhs_result, rhs_result, valid, error
+    """
+    A, B, C = ctx.get("A"), ctx.get("B"), ctx.get("C")
+    r, s = ctx.get("r", Fraction(0)), ctx.get("s", Fraction(0))
+
+    lhs_steps, rhs_steps = [], []
+    try:
+        # ---------- SUMA / ESCALAR ----------
+        if kind == "sum_comm":                   # A+B = B+A
+            S1, _ = ArOperations.addTwoMatrixWithSteps(A, B)
+            lhs_steps += [_snap("Sumar A + B", ("A", A), ("B", B), ("A+B", S1))]
+            S2, _ = ArOperations.addTwoMatrixWithSteps(B, A)
+            rhs_steps += [_snap("Sumar B + A", ("B", B), ("A", A), ("B+A", S2))]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(S1), "rhs_result": as_text_matrix(S2),
+                "valid": matrices_equal(S1, S2), "error": None
+            }
+
+        if kind == "sum_assoc":                  # (A+B)+C = A+(B+C)
+            AB, _ = ArOperations.addTwoMatrixWithSteps(A, B)
+            L, _  = ArOperations.addTwoMatrixWithSteps(AB, C)
+            lhs_steps += [
+                _snap("A + B", ("A", A), ("B", B), ("A+B", AB)),
+                _snap("(A+B) + C", ("A+B", AB), ("C", C), ("LHS", L))
+            ]
+            BC, _ = ArOperations.addTwoMatrixWithSteps(B, C)
+            R, _  = ArOperations.addTwoMatrixWithSteps(A, BC)
+            rhs_steps += [
+                _snap("B + C", ("B", B), ("C", C), ("B+C", BC)),
+                _snap("A + (B+C)", ("A", A), ("B+C", BC), ("RHS", R))
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "sum_zero":                   # A + 0 = A
+            Z = zeros_mat(len(A), len(A[0]))
+            L, _ = ArOperations.addTwoMatrixWithSteps(A, Z)
+            lhs_steps += [_snap("Construir 0 y sumar", ("A", A), ("0", Z), ("LHS", L))]
+            R = deepcopy(A)
+            rhs_steps += [_snap("Identidad de la suma", ("RHS", R))]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "dist_scalar_left":           # r(A+B) = rA + rB
+            AB, _ = ArOperations.addTwoMatrixWithSteps(A, B)
+            L,  _ = ArOperations.multiplyMatrixByScalarWithSteps(AB, r)
+            lhs_steps += [
+                _snap("A + B", ("A", A), ("B", B), ("A+B", AB)),
+                _snap(f"{_fmt_num(r)}·(A+B)", ("A+B", AB), ("LHS", L))
+            ]
+            rA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, r)
+            rB, _ = ArOperations.multiplyMatrixByScalarWithSteps(B, r)
+            R,  _ = ArOperations.addTwoMatrixWithSteps(rA, rB)
+            rhs_steps += [
+                _snap("Escalar A y B", ("rA", rA), ("rB", rB)),
+                _snap("rA + rB", ("rA", rA), ("rB", rB), ("RHS", R))
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "dist_scalar_sum":            # (r+s)A = rA + sA
+            rs = r + s
+            L, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, rs)
+            lhs_steps += [_snap(f"({_fmt_num(r)}+{_fmt_num(s)})·A", ("A", A), ("LHS", L))]
+            rA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, r)
+            sA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, s)
+            R,  _ = ArOperations.addTwoMatrixWithSteps(rA, sA)
+            rhs_steps += [
+                _snap("rA y sA", ("rA", rA), ("sA", sA)),
+                _snap("rA + sA", ("rA", rA), ("sA", sA), ("RHS", R))
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "scalar_assoc":               # r(sA) = (rs)A
+            sA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, s)
+            L,  _ = ArOperations.multiplyMatrixByScalarWithSteps(sA, r)
+            lhs_steps += [
+                _snap(f"{_fmt_num(s)}·A", ("A", A), ("sA", sA)),
+                _snap(f"{_fmt_num(r)}·(sA)", ("sA", sA), ("LHS", L))
+            ]
+            R,  _ = ArOperations.multiplyMatrixByScalarWithSteps(A, r * s)
+            rhs_steps += [_snap(f"({_fmt_num(r)}·{_fmt_num(s)})A", ("A", A), ("RHS", R))]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        # ---------- MULTIPLICACIÓN ----------
+        if kind == "mul_assoc":                  # A(BC) = (AB)C
+            BC, _ = ArOperations.multiplyTwoMatrixWithSteps(B, C)
+            L,  _ = ArOperations.multiplyTwoMatrixWithSteps(A, BC)
+            lhs_steps += [
+                _snap("B·C", ("B", B), ("C", C), ("BC", BC)),
+                _snap("A·(BC)", ("A", A), ("BC", BC), ("LHS", L))
+            ]
+            AB, _ = ArOperations.multiplyTwoMatrixWithSteps(A, B)
+            R,  _ = ArOperations.multiplyTwoMatrixWithSteps(AB, C)
+            rhs_steps += [
+                _snap("A·B", ("A", A), ("B", B), ("AB", AB)),
+                _snap("(AB)·C", ("AB", AB), ("C", C), ("RHS", R))
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "mul_dist_left":              # A(B+C) = AB + AC
+            BC, _ = ArOperations.addTwoMatrixWithSteps(B, C)
+            L,  _ = ArOperations.multiplyTwoMatrixWithSteps(A, BC)
+            lhs_steps += [
+                _snap("B + C", ("B", B), ("C", C), ("B+C", BC)),
+                _snap("A·(B+C)", ("A", A), ("B+C", BC), ("LHS", L))
+            ]
+            AB, _ = ArOperations.multiplyTwoMatrixWithSteps(A, B)
+            AC, _ = ArOperations.multiplyTwoMatrixWithSteps(A, C)
+            R,  _ = ArOperations.addTwoMatrixWithSteps(AB, AC)
+            rhs_steps += [
+                _snap("AB y AC", ("AB", AB), ("AC", AC)),
+                _snap("AB + AC", ("AB", AB), ("AC", AC), ("RHS", R))
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "mul_dist_right":             # (B+C)A = BA + CA
+            BC, _ = ArOperations.addTwoMatrixWithSteps(B, C)
+            L,  _ = ArOperations.multiplyTwoMatrixWithSteps(BC, A)
+            lhs_steps += [
+                _snap("B + C", ("B", B), ("C", C), ("B+C", BC)),
+                _snap("(B+C)·A", ("B+C", BC), ("A", A), ("LHS", L))
+            ]
+            BA, _ = ArOperations.multiplyTwoMatrixWithSteps(B, A)
+            CA, _ = ArOperations.multiplyTwoMatrixWithSteps(C, A)
+            R,  _ = ArOperations.addTwoMatrixWithSteps(BA, CA)
+            rhs_steps += [
+                _snap("BA y CA", ("BA", BA), ("CA", CA)),
+                _snap("BA + CA", ("BA", BA), ("CA", CA), ("RHS", R))
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "mul_scalar":                 # r(AB) = (rA)B = A(rB)
+            AB, _ = ArOperations.multiplyTwoMatrixWithSteps(A, B)
+            L,  _ = ArOperations.multiplyMatrixByScalarWithSteps(AB, r)
+            lhs_steps += [
+                _snap("A·B", ("A", A), ("B", B), ("AB", AB)),
+                _snap(f"{_fmt_num(r)}·(AB)", ("AB", AB), ("LHS", L))
+            ]
+            rA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, r)
+            R1, _ = ArOperations.multiplyTwoMatrixWithSteps(rA, B)   # (rA)B
+            rhs_steps += [_snap("(rA)·B", ("rA", rA), ("B", B), ("RHS", R1))]
+
+            # También calculamos A(rB) y lo mostramos como paso extra
+            rB, _ = ArOperations.multiplyMatrixByScalarWithSteps(B, r)
+            R2, _ = ArOperations.multiplyTwoMatrixWithSteps(A, rB)   # A(rB)
+            rhs_steps += [_snap("A·(rB) (extra)", ("A", A), ("rB", rB), ("A(rB)", R2))]
+
+            valid = matrices_equal(L, R1) and matrices_equal(L, R2)
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R1),
+                "valid": valid, "error": None
+            }
+
+        if kind == "mul_identity":               # I_m A = A = A I_n
+            m, n = len(A), len(A[0])
+            Im = identity_mat(m)
+            In = identity_mat(n)
+
+            L, _ = ArOperations.multiplyTwoMatrixWithSteps(Im, A)
+            lhs_steps += [_snap("I_m · A", ("I_m", Im), ("A", A), ("LHS", L))]
+
+            R, _ = ArOperations.multiplyTwoMatrixWithSteps(A, In)
+            rhs_steps += [_snap("A · I_n", ("A", A), ("I_n", In), ("RHS", R))]
+
+            # Ambas igualdades deberían ser A
+            valid = matrices_equal(L, A) and matrices_equal(R, A)
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": valid, "error": None
+            }
+
+        # ---------- TRANSPUESTAS ----------
+        if kind == "t_involutive":              # (A^T)^T = A
+            AT, _ = ArOperations.transposeMatrixWithSteps(A)
+            L,  _ = ArOperations.transposeMatrixWithSteps(AT)
+            lhs_steps += [
+                _snap("A^T",      ("A", A), ("A^T", AT)),
+                _snap("(A^T)^T",  ("A^T", AT), ("LHS", L)),
+            ]
+            R = deepcopy(A)
+            rhs_steps += [_snap("RHS = A", ("A", R))]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "t_sum":                     # (A + B)^T = A^T + B^T
+            AB, _ = ArOperations.addTwoMatrixWithSteps(A, B)
+            L,  _ = ArOperations.transposeMatrixWithSteps(AB)
+            lhs_steps += [
+                _snap("A + B", ("A", A), ("B", B), ("A+B", AB)),
+                _snap("(A+B)^T", ("A+B", AB), ("LHS", L)),
+            ]
+            AT, _ = ArOperations.transposeMatrixWithSteps(A)
+            BT, _ = ArOperations.transposeMatrixWithSteps(B)
+            R,  _ = ArOperations.addTwoMatrixWithSteps(AT, BT)
+            rhs_steps += [
+                _snap("A^T y B^T", ("A^T", AT), ("B^T", BT)),
+                _snap("A^T + B^T", ("A^T", AT), ("B^T", BT), ("RHS", R)),
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "t_scalar":                  # (rA)^T = r A^T
+            rA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, r)
+            L,  _ = ArOperations.transposeMatrixWithSteps(rA)
+            lhs_steps += [
+                _snap(f"{_fmt_num(r)}·A", ("A", A), ("rA", rA)),
+                _snap("(rA)^T", ("rA", rA), ("LHS", L)),
+            ]
+            AT, _ = ArOperations.transposeMatrixWithSteps(A)
+            R,  _ = ArOperations.multiplyMatrixByScalarWithSteps(AT, r)
+            rhs_steps += [
+                _snap("A^T", ("A", A), ("A^T", AT)),
+                _snap(f"{_fmt_num(r)}·A^T", ("A^T", AT), ("RHS", R)),
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
+        if kind == "t_prod":                    # (AB)^T = B^T A^T
+            AB, _ = ArOperations.multiplyTwoMatrixWithSteps(A, B)
+            L,  _ = ArOperations.transposeMatrixWithSteps(AB)
+            lhs_steps += [
+                _snap("A·B", ("A", A), ("B", B), ("AB", AB)),
+                _snap("(AB)^T", ("AB", AB), ("LHS", L)),
+            ]
+            AT, _ = ArOperations.transposeMatrixWithSteps(A)
+            BT, _ = ArOperations.transposeMatrixWithSteps(B)
+            R,  _ = ArOperations.multiplyTwoMatrixWithSteps(BT, AT)
+            rhs_steps += [
+                _snap("A^T y B^T", ("A^T", AT), ("B^T", BT)),
+                _snap("B^T·A^T", ("B^T", BT), ("A^T", AT), ("RHS", R)),
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+            
+        if kind == "inv_right":                 # A·A^{-1} = I
+            # Validaciones de forma
+            if A is None:
+                raise ValueError("Debes ingresar la matriz A.")
+            m = len(A)
+            if m == 0 or any(len(row) != m for row in A):
+                raise ValueError("A debe ser cuadrada para tener inversa.")
+
+            # Intentamos obtener A^{-1} por Gauss-Jordan (ya la tienes implementada)
+            ok, inv_steps, left, right, pivots, rank, reason = gauss_jordan_with_steps(A)
+            if not ok:
+                # No es invertible: devolvemos payload uniforme con el motivo
+                return {
+                    "lhs_steps": [_snap("Intento de invertir A (Gauss-Jordan)", ("A", A))],
+                    "rhs_steps": [],
+                    "lhs_result": None,
+                    "rhs_result": None,
+                    "valid": False,
+                    "error": f"A no es invertible: {reason}"
+                }
+
+            Ainv = right                  # gauss_jordan_with_steps devuelve A^{-1} en 'right'
+            I    = identity(m)
+
+            # LHS: A · A^{-1}
+            L, _ = ArOperations.multiplyTwoMatrixWithSteps(A, Ainv)
+            lhs_steps += [
+                _snap("A y A^{-1}", ("A", A), ("A^{-1}", Ainv)),
+                _snap("A·A^{-1}", ("A", A), ("A^{-1}", Ainv), ("LHS", L)),
+            ]
+
+            # RHS: I
+            R = I
+            rhs_steps += [
+                _snap("Matriz identidad I", ("I", I)),
+            ]
+
+            return {
+                "lhs_steps": lhs_steps,
+                "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L),
+                "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R),
+                "error": None
+            }
+
+
+
+        # Si no coincide ninguna clave:
+        return {
+            "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+            "lhs_result": None, "rhs_result": None,
+            "valid": False, "error": f"Propiedad desconocida: {kind}"
+        }
+
+    except Exception as e:
+        # Si algo falla (dimensiones incompatibles, etc.), devolvemos un payload uniforme
+        return {
+            "lhs_steps": lhs_steps,
+            "rhs_steps": rhs_steps,
+            "lhs_result": None,
+            "rhs_result": None,
+            "valid": False,
+            "error": str(e) or "Error al verificar la propiedad."
+        }
+
+# ========= Catálogo de identidades (álgebra en la etiqueta) =========
+PROP_META = {
+    # --- suma / escalar ---
+    "sum_comm": {
+        "label": "A + B = B + A",
+        "needs": {"A", "B"},
+        "check": lambda d: d["A"] == d["B"]
+    },
+    "sum_assoc": {
+        "label": "(A + B) + C = A + (B + C)",
+        "needs": {"A", "B", "C"},
+        "check": lambda d: d["A"] == d["B"] == d["C"]
+    },
+    "sum_zero": {
+        "label": "A + 0 = A",
+        "needs": {"A"},
+        "check": lambda d: True
+    },
+    "dist_scalar_left": {
+        "label": "r(A + B) = rA + rB",
+        "needs": {"A", "B", "r"},
+        "check": lambda d: d["A"] == d["B"]
+    },
+    "dist_scalar_sum": {
+        "label": "(r + s)A = rA + sA",
+        "needs": {"A", "r", "s"},
+        "check": lambda d: True
+    },
+    "scalar_assoc": {
+        "label": "r(sA) = (rs)A",
+        "needs": {"A", "r", "s"},
+        "check": lambda d: True
+    },
+
+    # --- producto ---
+    "mul_assoc": {
+        "label": "A(BC) = (AB)C",
+        "needs": {"A", "B", "C"},
+        "check": lambda d: d["B"][1] == d["C"][0] and d["A"][1] == d["B"][0]
+                            # AB: (m×n)(n×p)   BC: (n×p)(p×q)
+    },
+    "mul_dist_left": {
+        "label": "A(B + C) = AB + AC",
+        "needs": {"A", "B", "C"},
+        "check": lambda d: d["B"] == d["C"] and d["A"][1] == d["B"][0]
+    },
+    "mul_dist_right": {
+        "label": "(B + C)A = BA + CA",
+        "needs": {"A", "B", "C"},
+        "check": lambda d: d["B"] == d["C"] and d["B"][1] == d["A"][0]
+    },
+    "mul_scalar": {
+        "label": "r(AB) = (rA)B = A(rB)",
+        "needs": {"A", "B", "r"},
+        "check": lambda d: d["A"][1] == d["B"][0]
+    },
+
+    # --- transpuestas ---
+    "t_involutive": {
+        "label": "(A^T)^T = A",
+        "needs": {"A"},
+        "check": lambda d: True
+    },
+    "t_sum": {
+        "label": "(A + B)^T = A^T + B^T",
+        "needs": {"A", "B"},
+        "check": lambda d: d["A"] == d["B"]
+    },
+    "t_scalar": {
+        "label": "(rA)^T = rA^T",
+        "needs": {"A", "r"},
+        "check": lambda d: True
+    },
+    "t_prod": {
+        "label": "(AB)^T = B^T A^T",
+        "needs": {"A", "B"},
+        "check": lambda d: d["A"][1] == d["B"][0]
+    },
+}
+
+PROP_META.update({
+    "inv_right": {
+        "label": "A·A^{-1} = I",
+        "needs": {"A"},                   # igual que las demás (set)
+        "check": lambda d: d["A"][0] == d["A"][1]   # A debe ser cuadrada
+    }
+})
+
+
+
 @app.template_filter("fmt_num")
 def jinja_fmt_num(x):
     return _fmt_num(x)
@@ -1005,6 +1479,140 @@ def matrix_transpose_solve():
         return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
         return render_template("matrix_transpose.html", step=2, rows=rows, cols=cols, matrix_a=matrix_a, error=f"Error al realizar la transposición: {str(e)}")
+
+# ========= RUTA PARA VERIFICAR PROPIEDADES =========
+@app.route("/matrix_properties", methods=["GET", "POST"])
+def matrix_properties():
+    if request.method == "POST":
+        kind = request.form.get("kind")  # clave de la propiedad (sum_comm, mul_assoc, etc.)
+        try:
+            # Lee las matrices y escalares del formulario
+            A = [[safe_fraction(request.form.get(f"A_{i}_{j}", 0)) for j in range(2)] for i in range(2)]
+            B = [[safe_fraction(request.form.get(f"B_{i}_{j}", 0)) for j in range(2)] for i in range(2)]
+            C = [[safe_fraction(request.form.get(f"C_{i}_{j}", 0)) for j in range(2)] for i in range(2)]
+            r = safe_fraction(request.form.get("r", 1))
+            s = safe_fraction(request.form.get("s", 1))
+
+            ctx = {"A": A, "B": B, "C": C, "r": r, "s": s}
+            result = verify_identity(kind, ctx)
+
+            return render_template("matrix_properties_result.html", kind=kind, **result)
+
+        except Exception as e:
+            return render_template("matrix_properties.html", error=str(e))
+
+    return render_template("matrix_properties.html")
+
+# ========= Identidades de matrices (wizard) =========
+@app.route("/matrix_identities", methods=["GET", "POST"])
+def matrix_identities():
+    if request.method == "GET":
+        return render_template("matrix_identities.html", step=1)
+
+    stage = request.form.get("stage", "1")
+
+    # ----- Paso 1 -> Paso 2: tamaños -----
+    if stage == "1":
+        try:
+            num_mats = int(request.form.get("num_mats", "2"))
+            if num_mats not in (2, 3):
+                raise ValueError()
+
+            # tamaños para A, B (y C si aplica)
+            Ar = int(request.form["Ar"]); Ac = int(request.form["Ac"])
+            Br = int(request.form["Br"]); Bc = int(request.form["Bc"])
+            Cr = int(request.form.get("Cr", "1")); Cc = int(request.form.get("Cc", "1"))
+
+            for v in (Ar, Ac, Br, Bc, Cr, Cc):
+                if not (1 <= v <= 10): raise ValueError()
+
+            dims = {"A": (Ar, Ac), "B": (Br, Bc)}
+            if num_mats == 3:
+                dims["C"] = (Cr, Cc)
+
+            return render_template("matrix_identities.html",
+                                   step=2, num_mats=num_mats, dims=dims)
+        except Exception:
+            return render_template("matrix_identities.html", step=1,
+                                   error="Dimensiones inválidas (1–10).")
+
+    # ----- Paso 2 -> Paso 3: captura matrices y muestra menú de propiedades -----
+    if stage == "2":
+        try:
+            num_mats = int(request.form["num_mats"])
+            Ar, Ac = eval(request.form["dims_A"])   # "(m,n)" string → tuple
+            Br, Bc = eval(request.form["dims_B"])
+            dims = {"A": (Ar, Ac), "B": (Br, Bc)}
+
+            A = [[safe_fraction(request.form.get(f"A_{i}_{j}", 0)) for j in range(Ac)] for i in range(Ar)]
+            B = [[safe_fraction(request.form.get(f"B_{i}_{j}", 0)) for j in range(Bc)] for i in range(Br)]
+
+            C = None
+            if num_mats == 3:
+                Cr, Cc = eval(request.form["dims_C"])
+                dims["C"] = (Cr, Cc)
+                C = [[safe_fraction(request.form.get(f"C_{i}_{j}", 0)) for j in range(Cc)] for i in range(Cr)]
+
+            r = safe_fraction(request.form.get("r", "1"))
+            s = safe_fraction(request.form.get("s", "1"))
+
+            # filtrar propiedades válidas según dims
+            valid_props = []
+            for k, meta in PROP_META.items():
+                needs = meta["needs"]
+                has_all = all(n in {"A","B","C","r","s"} and ((n!="C") or (num_mats==3)) for n in needs)
+                if not has_all:
+                    continue
+                d = {}
+                for name in ("A","B","C"):
+                    if name in needs:
+                        d[name] = dims[name]
+                if meta["check"](d):
+                    valid_props.append((k, meta["label"]))
+
+            # guardo todo en session para el paso 3 (opción elegida)
+            session["mi_A"] = fraction_to_string(A)
+            session["mi_B"] = fraction_to_string(B)
+            if C is not None:
+                session["mi_C"] = fraction_to_string(C)
+            else:
+                session.pop("mi_C", None)
+            session["mi_r"] = str(r)
+            session["mi_s"] = str(s)
+
+            return render_template("matrix_identities.html", step=3,
+                                   A=A, B=B, C=C, r=r, s=s,
+                                   dims=dims, valid_props=valid_props)
+        except Exception as e:
+            return render_template("matrix_identities.html", step=1,
+                                   error=f"Revisa entradas: {e}")
+
+    return render_template("matrix_identities.html", step=1)
+
+
+@app.route("/matrix_identities_verify", methods=["POST"])
+def matrix_identities_verify():
+    # propiedad elegida en el paso 3
+    kind = request.form.get("kind")
+    if kind not in PROP_META:
+        return render_template("matrix_identity_result.html", error="Propiedad no válida.")
+
+    # recuperar datos de sesión
+    A = string_to_fraction(session.get("mi_A"))
+    B = string_to_fraction(session.get("mi_B"))
+    C = string_to_fraction(session.get("mi_C")) if "mi_C" in session else None
+    r = Fraction(session.get("mi_r", "1"))
+    s = Fraction(session.get("mi_s", "1"))
+
+    ctx = {"A": A, "B": B, "r": r, "s": s}
+    if C is not None:
+        ctx["C"] = C
+
+    result = verify_identity(kind, ctx)
+    label = PROP_META[kind]["label"]
+    return render_template("matrix_identity_result.html", label=label, kind=kind, **result)
+
+
 # ========= Inversa por Gauss-Jordan =========
 @app.route("/matrix_inverse", methods=["GET", "POST"])
 def matrix_inverse():
