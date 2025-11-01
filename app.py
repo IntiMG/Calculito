@@ -3,6 +3,7 @@ from models.equations_solver import Gauss
 from models.properties import Properties
 from models.matrix_equation import MatrixEquation
 from models.arithmetic_operations import ArOperations
+from models.determinant import calculate_determinant  # <-- CORRECTO
 from fractions import Fraction
 
 app = Flask(__name__)
@@ -1043,6 +1044,51 @@ def matrix_inverse_solve():
         invertible=True, n=n, A=A, Ainv=Ainv,
         steps=steps, rank=rank, pivots=pivots, props=props
     )
+
+@app.route("/determinant", methods=["GET", "POST"])
+def determinant():
+    if request.method == "POST":
+        try:
+            rows = int(request.form["rows"])
+            cols = int(request.form["cols"])
+            if not (1 <= rows <= 10 and 1 <= cols <= 10):
+                return render_template("determinant.html", error="Dimensiones entre 1 y 10.")
+            return render_template("determinant.html", rows=rows, cols=cols)
+        except (ValueError, KeyError):
+            return render_template("determinant.html", error="Ingresa números válidos.")
+
+    return render_template("determinant.html")  # GET → paso 1
+
+@app.route("/determinant_solve", methods=["POST"])
+def determinant_solve():
+    try:
+        rows = int(request.form["rows"])
+        cols = int(request.form["cols"])
+        method = request.form["method"]
+
+        # Construir matriz desde el formulario
+        matrix_str = []
+        for i in range(rows):
+            row = []
+            for j in range(cols):
+                val = request.form.get(f"A_{i}_{j}", "0").strip()
+                row.append(val or "0")
+            matrix_str.append(row)
+
+        # Calcular determinante
+        result = calculate_determinant(matrix_str, method)
+
+        # Devolver con todos los datos que espera el template
+        return render_template(
+            "determinant.html",
+            rows=rows,
+            cols=cols,
+            matrix=matrix_str,
+            result=result  # objeto con .det, .method, .steps, .invertibility, .properties, .matrix_str
+        )
+
+    except Exception as e:
+        return render_template("determinant.html", error=f"Error: {str(e)}")
 
 
 def fraction_to_string(matrix):
