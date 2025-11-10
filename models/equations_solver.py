@@ -1,4 +1,5 @@
 from fractions import Fraction
+from models.determinant import determinant_cofactor, string_to_fraction, is_square 
 
 class Gauss:
     def __init__(self, matrix, results, use_fractions=True, tol=1e-12):
@@ -260,3 +261,84 @@ class Gauss:
             else:
                 report.append(f"Columna {j+1}: sin pivote (variable libre)")
         return report
+
+def solve_by_cramer(matrixA_str, vectorb_str):
+    """
+    matrixA_str: [['1','2'],['3','4']]
+    vectorb_str: ['5','6']
+    """
+    A = string_to_fraction(matrixA_str)
+    b = [Fraction(x) for x in vectorb_str]
+
+    if not is_square(A):
+        raise ValueError("La matriz de coeficientes debe ser cuadrada.")
+    n = len(A)
+    if len(b) != n:
+        raise ValueError("El vector b debe tener el mismo tamaño que la matriz A.")
+
+    # 1) determinante principal
+    detA, detA_steps = determinant_cofactor(A)
+
+    # armamos un paso a paso “bonito”
+    steps = []
+    steps.append("=== MÉTODO DE CRAMER ===")
+    steps.append("1. Planteamos el sistema A·x = b.")
+    steps.append(f"   A = {matrixA_str}")
+    steps.append(f"   b = {vectorb_str}")
+    steps.append("2. Calculamos el determinante de la matriz de coeficientes A:")
+    steps.extend([f"   {s}" for s in detA_steps])
+    steps.append(f"   det(A) = {detA}")
+
+    if detA == 0:
+        steps.append("3. Como det(A) = 0, el sistema no tiene solución única (puede ser incompatible o con infinitas soluciones).")
+        return {
+            "detA": str(detA),
+            "unique": False,
+            "solutions": None,
+            "steps": steps
+        }
+
+    # 2) determinantes sustituyendo columnas
+    solutions = {}
+    col_details = []  # para mostrar bonito en el HTML
+
+    for col in range(n):
+        # construir A_col
+        Acol = []
+        for i in range(n):
+            row = []
+            for j in range(n):
+                if j == col:
+                    row.append(b[i])
+                else:
+                    row.append(A[i][j])
+            Acol.append(row)
+
+        detAcol, detAcol_steps = determinant_cofactor(Acol)
+
+        x_val = detAcol / detA
+        solutions[f"x{col+1}"] = x_val
+
+        col_details.append({
+            "index": col + 1,
+            "matrix": [[str(v) for v in fila] for fila in Acol],
+            "det": str(detAcol),
+            "steps": detAcol_steps,
+            "value": str(x_val)
+        })
+
+        # también lo ponemos en el gran paso a paso lineal
+        steps.append(f"3.{col+1}) Construimos A_{col+1} reemplazando la columna {col+1} por b.")
+        steps.append(f"     A_{col+1} = {[[str(v) for v in fila] for fila in Acol]}")
+        steps.append("     Calculamos su determinante:")
+        steps.extend([f"       {s}" for s in detAcol_steps])
+        steps.append(f"     det(A_{col+1}) = {detAcol}")
+        steps.append(f"     x{col+1} = det(A_{col+1}) / det(A) = {detAcol} / {detA} = {x_val}")
+
+    return {
+        "detA": str(detA),
+        "unique": True,
+        "solutions": {k: str(v) for k, v in solutions.items()},
+        "steps": steps,
+        "columns": col_details  # esto es para mostrar columna por columna en el HTML
+    }

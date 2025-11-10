@@ -72,13 +72,15 @@
             <div class="form-group">
                 <label for="method">Método:</label>
                 <select name="method" id="method" required>
-                    <option value="property5">Propiedad Multiplicativa (det(AB)=det(A)×det(B))</option>
                     <option value="cofactor">Expansión por Cofactores</option>
                     {% if rows == 3 %}
                     <option value="sarrus">Regla de Sarrus</option>
-                    <option value="cramer">Método de Cramer</option>
                     {% endif %}
+                    <option value="property5">Propiedad Multiplicativa (det(AB)=det(A)×det(B))</option>
                 </select>
+                <p style="margin-top:6px;font-size:13px;color:#7f8c8d;">
+                    ¿Quieres resolver un sistema por Cramer? <a href="{{ url_for('cramer') }}">Hazlo aquí</a>.
+                </p>
             </div>
 
             <button type="submit" class="btn">Calcular Determinante</button>

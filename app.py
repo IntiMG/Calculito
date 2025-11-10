@@ -1676,11 +1676,13 @@ def determinant_solve():
         cols = int(request.form["cols"])
         method = request.form["method"]
 
-        # Si el usuario selecciona la propiedad 5, redirigir a la nueva vista
+        if method == "cramer":
+            return redirect(url_for("cramer"))
+        
         if method == "property5":
             return redirect(url_for("determinant_property5"))
 
-        # 🔹 Construir matriz desde el formulario
+        # Construir matriz desde el formulario
         matrix_str = []
         for i in range(rows):
             row = []
@@ -1692,7 +1694,7 @@ def determinant_solve():
         # Calcular determinante normalmente
         result = calculate_determinant(matrix_str, method)
 
-        # 🔹 Renderizar la plantilla con los resultados
+        # Renderizar la plantilla con los resultados
         return render_template(
             "determinant.html",
             rows=rows,
@@ -1778,7 +1780,73 @@ def determinant_property5():
     # GET
     return render_template("determinant_property5.html")
 
+@app.route("/cramer", methods=["GET", "POST"])
+def cramer():
+    from models.equations_solver import solve_by_cramer
 
+    if request.method == "POST":
+        # Paso 1: recibo número de incógnitas y ecuaciones
+        num_unk = request.form.get("num_unk")
+        num_eq = request.form.get("num_eq")
+
+        # Si aún no vienen coeficientes, estamos en paso 1 → paso 2
+        if not request.form.get("A_0_0"):
+            if not num_unk or not num_eq:
+                return render_template("cramer.html", error="Ingresa ambos valores.")
+            num_unk = int(num_unk)
+            num_eq = int(num_eq)
+
+            if num_unk != num_eq:
+                return render_template("cramer.html",
+                                       error="Para Cramer, número de ecuaciones y de incógnitas deben ser iguales.",
+                                       num_unk=num_unk,
+                                       num_eq=num_eq)
+
+            if num_unk not in (2, 3):
+                return render_template("cramer.html",
+                                       error="Para mostrar el paso a paso lo limitamos a sistemas 2×2 o 3×3.",
+                                       num_unk=num_unk,
+                                       num_eq=num_eq)
+
+            # Mostrar formulario de coeficientes
+            return render_template("cramer.html",
+                                   num_unk=num_unk,
+                                   num_eq=num_eq,
+                                   step="input")
+
+        # Aquí ya vienen los coeficientes
+        n = int(request.form.get("n"))
+        matrixA_str = []
+        for i in range(n):
+            row = []
+            for j in range(n):
+                row.append(request.form.get(f"A_{i}_{j}", "0"))
+            matrixA_str.append(row)
+
+        vectorb_str = []
+        for i in range(n):
+            vectorb_str.append(request.form.get(f"b_{i}", "0"))
+
+        try:
+            result = solve_by_cramer(matrixA_str, vectorb_str)
+            return render_template("cramer.html",
+                                   num_unk=n,
+                                   num_eq=n,
+                                   matrixA=matrixA_str,
+                                   vectorb=vectorb_str,
+                                   result=result,
+                                   step="result")
+        except Exception as e:
+            return render_template("cramer.html",
+                                   num_unk=n,
+                                   num_eq=n,
+                                   matrixA=matrixA_str,
+                                   vectorb=vectorb_str,
+                                   error=str(e),
+                                   step="input")
+
+    # GET
+    return render_template("cramer.html")
 
 
 def fraction_to_string(matrix):
