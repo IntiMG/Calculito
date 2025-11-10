@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, url_for, session
+from flask import Flask, render_template, request, url_for, session, redirect
 from models.equations_solver import Gauss
 from models.properties import Properties
 from models.matrix_equation import MatrixEquation
 from models.arithmetic_operations import ArOperations
 from models.determinant import calculate_determinant  # <-- CORRECTO
 from fractions import Fraction
+from models.determinant import determinant_product_property
 
 app = Flask(__name__)
 app.secret_key = 'a_secret_key'  # Required for session
@@ -1309,6 +1310,7 @@ def matrix_multiply_solve():
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error al realizar la multiplicación: {str(e)}")
+
 @app.route("/matrix_transpose", methods=["GET", "POST"])
 def matrix_transpose():
     use_result = request.args.get('use_result')
@@ -1674,7 +1676,11 @@ def determinant_solve():
         cols = int(request.form["cols"])
         method = request.form["method"]
 
-        # Construir matriz desde el formulario
+        # Si el usuario selecciona la propiedad 5, redirigir a la nueva vista
+        if method == "property5":
+            return redirect(url_for("determinant_property5"))
+
+        # 🔹 Construir matriz desde el formulario
         matrix_str = []
         for i in range(rows):
             row = []
@@ -1683,10 +1689,10 @@ def determinant_solve():
                 row.append(val or "0")
             matrix_str.append(row)
 
-        # Calcular determinante
+        # Calcular determinante normalmente
         result = calculate_determinant(matrix_str, method)
 
-        # Devolver con todos los datos que espera el template
+        # 🔹 Renderizar la plantilla con los resultados
         return render_template(
             "determinant.html",
             rows=rows,
@@ -1697,6 +1703,82 @@ def determinant_solve():
 
     except Exception as e:
         return render_template("determinant.html", error=f"Error: {str(e)}")
+
+
+@app.route("/determinant/property5", methods=["GET", "POST"])
+def determinant_property5():
+    if request.method == "POST":
+        rows_str = request.form.get("rows", "").strip()
+        cols_str = request.form.get("cols", "").strip()
+
+        # si solo mandaron el tamaño, mostramos el formulario de las dos matrices
+        # (todavía no calculamos)
+        if not request.form.get("A_0_0"):
+            # si cols viene vacío lo igualamos a rows
+            if not cols_str:
+                cols_str = rows_str
+            rows = int(rows_str)
+            cols = int(cols_str)
+            return render_template(
+                "determinant_property5.html",
+                rows=rows,
+                cols=cols
+            )
+
+        if not cols_str:
+            cols_str = rows_str
+
+        rows = int(rows_str)
+        cols = int(cols_str)
+
+        if rows != cols:
+            return render_template(
+                "determinant_property5.html",
+                error="Las matrices deben ser cuadradas del mismo orden."
+            )
+
+        # Leer matriz A
+        matrixA_str = []
+        for i in range(rows):
+            row_vals = []
+            for j in range(cols):
+                val = request.form.get(f"A_{i}_{j}", "0")
+                row_vals.append(val)
+            matrixA_str.append(row_vals)
+
+        # Leer matriz B
+        matrixB_str = []
+        for i in range(rows):
+            row_vals = []
+            for j in range(cols):
+                val = request.form.get(f"B_{i}_{j}", "0")
+                row_vals.append(val)
+            matrixB_str.append(row_vals)
+
+        try:
+            result = determinant_product_property(matrixA_str, matrixB_str)
+            return render_template(
+                "determinant_property5.html",
+                rows=rows,
+                cols=cols,
+                matrixA=matrixA_str,
+                matrixB=matrixB_str,
+                result=result
+            )
+        except Exception as e:
+            return render_template(
+                "determinant_property5.html",
+                rows=rows,
+                cols=cols,
+                matrixA=matrixA_str,
+                matrixB=matrixB_str,
+                error=str(e)
+            )
+
+    # GET
+    return render_template("determinant_property5.html")
+
+
 
 
 def fraction_to_string(matrix):

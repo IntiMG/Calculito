@@ -1,5 +1,5 @@
 from fractions import Fraction
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 import copy
 
 def fraction_to_string(matrix: List[List[Fraction]]) -> List[List[str]]:
@@ -168,3 +168,140 @@ def calculate_determinant(matrix_str: List[List[str]], method: str) -> dict:
         "properties": properties,
         "matrix_str": fraction_to_string(matrix)
     }
+
+def _fmt_frac(x: Fraction) -> str:
+    if isinstance(x, Fraction):
+        if x.denominator == 1:
+            return str(x.numerator)
+        return f"{x.numerator}/{x.denominator}"
+    return str(x)
+
+def _fmt_matrix_html(mat):
+    # arma una tablita simple en HTML
+    html = ['<table style="border-collapse:collapse;">']
+    for row in mat:
+        html.append('<tr>')
+        for val in row:
+            html.append(
+                f'<td style="border:1px solid #ccc;padding:3px 6px;text-align:center;">{_fmt_frac(val)}</td>'
+            )
+        html.append('</tr>')
+    html.append('</table>')
+    return "".join(html)
+
+def multiply_matrices_with_steps(A, B):
+    rows_A = len(A)
+    cols_A = len(A[0])
+    rows_B = len(B)
+    cols_B = len(B[0])
+
+    if cols_A != rows_B:
+        raise ValueError("No se pueden multiplicar: las columnas de A deben ser iguales a las filas de B.")
+
+    steps = []
+    steps.append(f"Multiplicación de matrices: A ({rows_A}x{cols_A}) · B ({rows_B}x{cols_B})")
+    steps.append("Cada elemento C[i][j] de AB se obtiene como la suma A[i][k]·B[k][j].")
+
+    AB = [[Fraction(0) for _ in range(cols_B)] for _ in range(rows_A)]
+
+    for i in range(rows_A):
+        for j in range(cols_B):
+            total = Fraction(0)
+            partials = []
+            for k in range(cols_A):
+                prod = A[i][k] * B[k][j]
+                partials.append(
+                    f"A[{i}][{k}]·B[{k}][{j}] = {_fmt_frac(A[i][k])}·{_fmt_frac(B[k][j])} = {_fmt_frac(prod)}"
+                )
+                total += prod
+            AB[i][j] = total
+            steps.append(
+                f"Elemento C[{i}][{j}]: "
+                + " + ".join(p.split(" = ")[-1] for p in partials)
+                + f" = {_fmt_frac(total)}"
+            )
+            for p in partials:
+                steps.append("   " + p)
+
+    # 👇 aquí metemos la tabla HTML
+    steps.append(f"Matriz AB resultante ({rows_A}x{cols_B}):</br>{_fmt_matrix_html(AB)}")
+
+    return AB, steps
+
+def determinant_product_property(matrixA_str: List[List[str]],
+                                 matrixB_str: List[List[str]],
+                                 method: str = "cofactor") -> dict:
+    # Reutilizamos tus helpers
+    A = string_to_fraction(matrixA_str)
+    B = string_to_fraction(matrixB_str)
+
+    # Validaciones “de libro” para det(AB) = det(A)·det(B)
+    # Lo usual: A y B deben ser cuadradas del mismo orden
+    if not is_square(A) or not is_square(B):
+        raise ValueError("Para verificar det(AB) = det(A)·det(B), A y B deben ser matrices cuadradas.")
+    if len(A) != len(B):
+        raise ValueError("A y B deben ser del mismo orden para verificar la propiedad 5.")
+
+    n = len(A)
+
+    # 1) LADO IZQUIERDO: det(AB)
+    AB, mult_steps = multiply_matrices_with_steps(A, B)
+
+    # elegimos el método; para generalidad usamos cofactores
+    if method == "sarrus" and n == 3:
+        det_AB, det_AB_steps = sarrus(AB)
+        lhs_method_name = "Regla de Sarrus sobre AB"
+    else:
+        det_AB, det_AB_steps = determinant_cofactor(AB)
+        lhs_method_name = "Expansión por cofactores sobre AB"
+
+    lhs_steps = []
+    lhs_steps.append("=== LADO IZQUIERDO: det(AB) ===")
+    lhs_steps.extend(mult_steps)
+    lhs_steps.append(f"Ahora calculamos el determinante de AB usando: {lhs_method_name}")
+    lhs_steps.extend(det_AB_steps)
+    lhs_steps.append(f"Resultado lado izquierdo: det(AB) = {det_AB}")
+
+    # 2) LADO DERECHO: det(A) · det(B)
+    # determinante de A
+    if method == "sarrus" and n == 3:
+        det_A, det_A_steps = sarrus(A)
+        method_A_name = "Regla de Sarrus sobre A"
+    else:
+        det_A, det_A_steps = determinant_cofactor(A)
+        method_A_name = "Expansión por cofactores sobre A"
+
+    # determinante de B
+    if method == "sarrus" and n == 3:
+        det_B, det_B_steps = sarrus(B)
+        method_B_name = "Regla de Sarrus sobre B"
+    else:
+        det_B, det_B_steps = determinant_cofactor(B)
+        method_B_name = "Expansión por cofactores sobre B"
+
+    rhs_steps = []
+    rhs_steps.append("=== LADO DERECHO: det(A) × det(B) ===")
+    rhs_steps.append(f"Cálculo de det(A) usando: {method_A_name}")
+    rhs_steps.extend(det_A_steps)
+    rhs_steps.append(f"Cálculo de det(B) usando: {method_B_name}")
+    rhs_steps.extend(det_B_steps)
+    rhs_steps.append(f"Multiplicamos: det(A) · det(B) = {det_A} · {det_B} = {det_A * det_B}")
+    rhs_value = det_A * det_B
+
+    # 3) Armamos el resultado completo
+    return {
+        "lhs": {
+            "matrix": fraction_to_string(AB),
+            "det": str(det_AB),
+            "steps": lhs_steps
+        },
+        "rhs": {
+            "detA": str(det_A),
+            "detB": str(det_B),
+            "product": str(rhs_value),
+            "steps": rhs_steps
+        },
+        "same": det_AB == rhs_value,
+        "note": "Propiedad 5 verificada" if det_AB == rhs_value else "La igualdad no se cumple (revisa las matrices o el método)."
+    }
+
