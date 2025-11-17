@@ -6,6 +6,8 @@ from models.arithmetic_operations import ArOperations
 from models.determinant import calculate_determinant  # <-- CORRECTO
 from fractions import Fraction
 from models.determinant import determinant_product_property
+from models.positional_notation import PositionalNotation
+
 
 app = Flask(__name__)
 app.secret_key = 'a_secret_key'  # Required for session
@@ -1847,6 +1849,43 @@ def cramer():
 
     # GET
     return render_template("cramer.html")
+
+@app.route("/positional_notation", methods=["GET", "POST"])
+def positional_notation():
+    error = None
+    expresion = None
+    pasos = []
+    resultado = None
+    base = "10"   # valor por defecto
+
+    if request.method == "POST":
+        base = request.form.get("base", "10")
+        numero = request.form.get("numero", "").strip()
+
+        try:
+            if base == "10":
+                # Descomponer un número en base 10
+                n = int(numero)
+                expresion, pasos, resultado = PositionalNotation.descomponer_base_10(n)
+
+            elif base == "2":
+                # Descomponer un número en base 2
+                expresion, pasos, resultado = PositionalNotation.descomponer_base_2(numero)
+
+            else:
+                error = "Base no válida seleccionada."
+
+        except ValueError as e:
+            error = str(e)
+
+    return render_template(
+        "positional_notation.html",
+        error=error,
+        expresion=expresion,
+        pasos=pasos,
+        resultado=resultado,
+        base=base,
+    )
 
 
 def fraction_to_string(matrix):
