@@ -7,6 +7,7 @@ from models.determinant import calculate_determinant  # <-- CORRECTO
 from fractions import Fraction
 from models.determinant import determinant_product_property
 from models.positional_notation import PositionalNotation
+from models.numerical_errors import ErrorAnalysis
 
 
 app = Flask(__name__)
@@ -1885,6 +1886,74 @@ def positional_notation():
         pasos=pasos,
         resultado=resultado,
         base=base,
+    )
+
+@app.route("/numerical_errors", methods=["GET", "POST"])
+def numerical_errors():
+    error = None
+    filas = []
+    resumen = None
+
+    # Valores por defecto (los de la tabla del profe)
+    capital_inicial = 150000.0
+    tasa = 0.0625  # 6.25 %
+    iteraciones = 7
+    decimales = 2
+    tipo_error = "truncamiento"
+
+    if request.method == "POST":
+        try:
+            # Tipo de error: truncamiento o redondeo
+            tipo_error = request.form.get("tipo_error", "truncamiento")
+
+            # Número de iteraciones (lo elige el usuario)
+            iteraciones = int(request.form.get("iteraciones", "7"))
+
+            # Capital inicial (opcional para el usuario, pero con default)
+            capital_inicial = float(request.form.get("capital_inicial", "150000"))
+
+            # Tasa (puede venir como 0.0625 o 6.25)
+            tasa_str = request.form.get("tasa", "0.0625").strip()
+            if "%" in tasa_str:
+                tasa = float(tasa_str.replace("%", "")) / 100.0
+            else:
+                tasa = float(tasa_str)
+
+            # Decimales a mantener en el interés aproximado
+            decimales = int(request.form.get("decimales", "2"))
+
+            # Generar tabla
+            filas = ErrorAnalysis.generar_tabla_interes_compuesto(
+                capital_inicial=capital_inicial,
+                tasa=tasa,
+                iteraciones=iteraciones,
+                decimales=decimales,
+                tipo_error=tipo_error,
+            )
+
+            if filas:
+                resumen = {
+                    "capital_inicial": capital_inicial,
+                    "tasa": tasa,
+                    "iteraciones": iteraciones,
+                    "tipo_error": tipo_error,
+                    "decimales": decimales,
+                    "error_total": filas[-1].error_acumulado,
+                }
+
+        except Exception as e:
+            error = f"Revisa los datos ingresados: {e}"
+
+    return render_template(
+        "numerical_errors.html",
+        error=error,
+        filas=filas,
+        resumen=resumen,
+        capital_inicial=capital_inicial,
+        tasa=tasa,
+        iteraciones=iteraciones,
+        decimales=decimales,
+        tipo_error=tipo_error,
     )
 
 

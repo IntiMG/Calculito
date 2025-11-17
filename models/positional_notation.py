@@ -1,11 +1,9 @@
 # models/positional_notation.py
 
 class PositionalNotation:
-    """
-    Módulo para descomponer números en notación posicional
-    en base 10 y base 2, mostrando TODOS los pasos que pide el profesor.
-    """
 
+    # Módulo para descomponer números en notación posicional en base 10 y base 2
+    
     @staticmethod
     def descomponer_base_10(numero: int):
         """
@@ -85,7 +83,7 @@ class PositionalNotation:
         return expresion_suma, pasos, resultado_decimal
 
 
-# Pequeña prueba manual (solo si ejecutas este archivo directamente)
+# Pequeña prueba manual
 if __name__ == "__main__":
     # Ejemplo en base 10: 84506
     expr10, pasos10, res10 = PositionalNotation.descomponer_base_10(84506)
