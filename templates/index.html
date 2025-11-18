@@ -4,6 +4,131 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Álgebra Lineal</title>
+<<<<<<< HEAD
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Álgebra Lineal</h1>
+            <p class="subtitle">
+                Módulo académico para sistemas de ecuaciones, matrices, métodos numéricos y análisis de errores.
+            </p>
+        </header>
+
+        <main>
+
+            <!-- SECCIÓN 1: ÁLGEBRA LINEAL -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Álgebra Lineal</h2>
+                    <span class="section-tag">Vectores · Sistemas · Interpretación</span>
+                </div>
+                <p class="section-desc">
+                    Herramientas para trabajar con sistemas de ecuaciones, combinaciones lineales e interpretaciones
+                    geométricas en ℝⁿ.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/linear_system">Resolver Sistemas de Ecuaciones</a></li>
+                    <li><a class="tool-link" href="/linear_combination">Combinación Lineal</a></li>
+                    <li><a class="tool-link" href="/vector_equation">Ecuación Vectorial</a></li>
+                    <li><a class="tool-link" href="/matvec">Multiplicación Matriz × Vector</a></li>
+                    <li><a class="tool-link" href="/matrix_equation">Ecuación Matricial (AX = B)</a></li>
+                    <li><a class="tool-link" href="/homogeneous">Sistema Homogéneo (AX = 0)</a></li>
+                    <li><a class="tool-link" href="/properties">Propiedades Algebraicas de ℝⁿ</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 2: OPERACIONES CON MATRICES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Operaciones con Matrices</h2>
+                    <span class="section-tag">Aritmética · Transpuesta · Inversa</span>
+                </div>
+                <p class="section-desc">
+                    Módulos paso a paso para ver cómo se construyen las operaciones básicas y propiedades matriciales.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/matrix_operations">Operaciones Aritméticas (vista general)</a></li>
+                    <li><a class="tool-link" href="/matrix_add">Suma de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_subtract">Resta de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_scalar">Multiplicación por Escalar</a></li>
+                    <li><a class="tool-link" href="/matrix_multiply">Multiplicación Matricial</a></li>
+                    <li><a class="tool-link" href="/matrix_transpose">Transpuesta de una Matriz</a></li>
+                    <li><a class="tool-link" href="/matrix_inverse">Inversa por Gauss–Jordan</a></li>
+                    <li><a class="tool-link" href="/matrix_properties">Verificar Propiedades de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_identities">Identidades Matriciales</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 3: DETERMINANTES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Determinantes</h2>
+                    <span class="section-tag">Det(A) · Propiedades · Cramer</span>
+                </div>
+                <p class="section-desc">
+                    Cálculo detallado del determinante, propiedades importantes y aplicación al método de Cramer.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/determinant">Calcular Determinante (con pasos)</a></li>
+                    <li><a class="tool-link" href="/determinant/property5">Propiedad 5: det(A·B) = det(A)·det(B)</a></li>
+                    <li><a class="tool-link" href="/cramer">Método de Cramer</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 4: REPRESENTACIÓN NUMÉRICA -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Representación Numérica</h2>
+                    <span class="section-tag">Bases · Notación Posicional</span>
+                </div>
+                <p class="section-desc">
+                    Análisis de cómo se representan los números en distintas bases y su descomposición posicional.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/positional_notation">Notación Posicional (Base 10 y Base 2)</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 5: BINARIOS -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Binarios</h2>
+                    <span class="section-tag">Sistemas Numéricos</span>
+                </div>
+                <p class="section-desc">
+                    Conversiones entre decimal, binario y hexadecimal.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/binaries">Binarios</a></li>
+                </ul>
+            </section>
+
+
+            <!-- SECCIÓN 6: MÉTODOS NUMÉRICOS Y ERRORES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Métodos Numéricos y Errores</h2>
+                    <span class="section-tag">Truncamiento · Redondeo · Punto flotante</span>
+                </div>
+                <p class="section-desc">
+                    Módulos dedicados a errores numéricos, acumulación de error y representación en punto flotante con NumPy.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/numerical_errors">Errores numéricos + Tabla de truncamiento</a></li>
+                    <li><a class="tool-link" href="/floating_point">Errores en punto flotante (0.1 + 0.2 == 0.3)</a></li>
+                    <li><a class="tool-link" href="/numpy_workshop">Taller NumPy: pérdidas de precisión</a></li>
+                    <li><a class="tool-link" href="/error_analysis">Errores: absoluto, relativo y propagación</a></li>
+                </ul>
+            </section>
+
+        </main>
+
+        <footer>
+            Desarrollado por Pelones 👨🏻‍🦲 – Calculadora de Álgebra Lineal © 2025
+        </footer>
+=======
     <style>
         * {
             margin: 0;
@@ -315,6 +440,7 @@
                 <button type="submit" class="btn">Resolver Sistema</button>
             </form>
         {% endif %}
+>>>>>>> 50477990be3153c1a50ac6c4f3f2ce9a6c9a2f70
     </div>
 </body>
 </html>

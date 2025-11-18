@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Determinante de Matriz</title>
+    <style>
+        body { font-family: Arial; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 20px; }
+        .form-group { margin: 15px 0; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        input, select { padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        .matrix-table { border-collapse: collapse; margin: 20px auto; }
+        .matrix-table td { padding: 8px; text-align: center; }
+        .matrix-table input { width: 70px; padding: 8px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { background: #3498db; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .btn:hover { background: #2980b9; }
+        .result { margin-top: 30px; padding: 20px; background: #eef5fc; border-radius: 8px; }
+        .steps { background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 20px 0; }
+        .verification { background: #d5f4e6; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .error { background: #fadbd8; color: #c0392b; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .btn-group { text-align: center; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Determinante de Matriz</h1>
+        <p class="subtitle">Ingresa las dimensiones y valores de la matriz A</p>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <!-- PASO 1: Ingresar filas y columnas -->
+        {% if not rows and not cols %}
+        <form method="POST" action="{{ url_for('determinant') }}">
+            <div class="form-group">
+                <label for="rows">Número de filas:</label>
+                <input type="number" id="rows" name="rows" min="1" max="10" required placeholder="Ej: 3">
+            </div>
+            <div class="form-group">
+                <label for="cols">Número de columnas:</label>
+                <input type="number" id="cols" name="cols" min="1" max="10" required placeholder="Ej: 3">
+            </div>
+            <button type="submit" class="btn">Continuar</button>
+        </form>
+        {% endif %}
+
+        <!-- PASO 2: Validar cuadrada y pedir valores -->
+        {% if rows and cols and rows == cols and not result %}
+        <form method="POST" action="{{ url_for('determinant_solve') }}">
+            <input type="hidden" name="rows" value="{{ rows }}">
+            <input type="hidden" name="cols" value="{{ cols }}">
+
+            <p style="text-align: center; color: #7f8c8d;">Matriz A ({{ rows }}×{{ cols }}):</p>
+            <table class="matrix-table">
+                {% for i in range(rows) %}
+                <tr>
+                    {% for j in range(cols) %}
+                    <td>
+                        <input type="text" name="A_{{ i }}_{{ j }}"
+                               value="{{ matrix[i][j] if matrix else '' }}"
+                               placeholder="a{{ i+1 }}{{ j+1 }}" required>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+
+            <div class="form-group">
+                <label for="method">Método:</label>
+                <select name="method" id="method" required>
+                    <option value="cofactor">Expansión por Cofactores</option>
+                    {% if rows == 3 %}
+                    <option value="sarrus">Regla de Sarrus</option>
+                    {% endif %}
+                    <option value="property5">Propiedad Multiplicativa (det(AB)=det(A)×det(B))</option>
+                </select>
+                <p style="margin-top:6px;font-size:13px;color:#7f8c8d;">
+                    ¿Quieres resolver un sistema por Cramer? <a href="{{ url_for('cramer') }}">Hazlo aquí</a>.
+                </p>
+            </div>
+
+            <button type="submit" class="btn">Calcular Determinante</button>
+        </form>
+        {% endif %}
+
+        <!-- ERROR: No es cuadrada -->
+        {% if rows and cols and rows != cols %}
+        <div class="error">
+            <strong>Error:</strong> La matriz debe ser cuadrada (filas = columnas).<br>
+            Ingresaste {{ rows }} filas y {{ cols }} columnas.
+        </div>
+        <div class="btn-group">
+            <a href="{{ url_for('determinant') }}" class="btn">Volver a Intentar</a>
+        </div>
+        {% endif %}
+
+        <!-- RESULTADO -->
+        {% if result %}
+        <div class="result">
+            <h3>{{ result.method }}</h3>
+            <p><strong>det(A) = {{ result.det }}</strong></p>
+            <p><strong>{{ result.invertibility }}</strong></p>
+
+            <div class="steps">
+                <h3>Paso a paso:</h3>
+                <ol>
+                    {% for step in result.steps %}
+                        <li>{{ step | safe }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+
+            {% if result.properties %}
+            <div class="verification">
+                <h3>Propiedades verificadas:</h3>
+                <ul>
+                    {% for prop in result.properties %}
+                        <li>{{ prop }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <p style="text-align: center; margin: 20px 0;">Matriz A:</p>
+            <table class="matrix-table" style="margin: 0 auto;">
+                {% for row in result.matrix_str %}
+                <tr>
+                    {% for val in row %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="btn-group">
+            <a href="{{ url_for('determinant') }}" class="btn">Nueva Matriz</a>
+            <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al Menú Principal</a>
+
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

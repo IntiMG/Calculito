@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inversa por Gauss-Jordan</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#000,#000);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .container{background:#fff;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,.1);padding:40px;max-width:900px;width:100%;animation:fadeIn .6s ease-out;text-align:center}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+    h1{color:#000;margin-bottom:20px;font-size:2.2em;font-weight:300}
+    .subtitle{color:#7f8c8d;margin-bottom:25px}
+    .error{background:#e74c3c;color:#fff;padding:12px;border-radius:10px;margin-bottom:15px}
+    .step-indicator{display:flex;justify-content:center;margin-bottom:20px}
+    .step{width:40px;height:40px;border-radius:50%;background:#1b161857;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;margin:0 10px;position:relative}
+    .step.active,.step.completed{background:#000}
+    .step::after{content:'';position:absolute;top:50%;left:100%;width:20px;height:2px;background:#000;transform:translateY(-50%)}
+    .step:last-child::after{display:none}
+    .form-group{margin:16px 0;display:flex;justify-content:center;align-items:center}
+    label{font-size:1.05em;color:#000;margin-right:10px}
+    input{padding:10px;border:2px solid #000;border-radius:8px;width:120px;text-align:center}
+    .matrix-table{margin:0 auto;border-collapse:separate;border-spacing:10px}
+    .matrix-table input{width:90px;height:48px;text-align:center;border:2px solid #000;border-radius:8px}
+    .btn{background:#000;color:#fff;padding:12px 24px;border:none;border-radius:10px;font-size:1.05em;cursor:pointer;transition:.3s;margin-top:18px}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(0,0,0,.2)}
+    .note{color:#7f8c8d;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Inversa de una Matriz (Gauss-Jordan)</h1>
+    <p class="subtitle">Construye [A | I], aplica operaciones elementales y obtén A⁻¹ si existe.</p>
+
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+    {% if step == 1 %}
+      <div class="step-indicator"><div class="step active">1</div><div class="step">2</div></div>
+      <form method="post" action="{{ url_for('matrix_inverse') }}">
+        <div class="form-group">
+          <label>Dimensión (n×n):</label>
+          <input type="number" name="n" min="1" max="10" required placeholder="Ej: 3">
+        </div>
+        <button class="btn" type="submit">Continuar</button>
+      </form>
+      <div class="btn-group" style="margin-top:1rem;">
+        <a href="{{ url_for('home') }}" class="btn">Volver al Menú Principal</a>
+      </div>
+
+    {% elif step == 2 %}
+      <div class="step-indicator"><div class="step completed">1</div><div class="step active">2</div></div>
+      <form method="post" action="{{ url_for('matrix_inverse_solve') }}">
+        <input type="hidden" name="n" value="{{ n }}">
+        <p class="note">Ingresa elementos de A (acepta enteros, decimales o fracciones a/b):</p>
+        <table class="matrix-table">
+          {% for i in range(n) %}
+            <tr>
+              {% for j in range(n) %}
+                <td><input name="A_{{ i }}_{{ j }}" placeholder="a{{ i+1 }}{{ j+1 }}" required></td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </table>
+        <button class="btn" type="submit">Calcular A⁻¹</button>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

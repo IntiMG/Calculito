@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Error absoluto y propagación</title>
+    <style>
+        body {
+            background: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 30px 10px;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 24px 28px 20px;
+            max-width: 1000px;
+            width: 100%;
+            box-shadow: 0 18px 35px rgba(0,0,0,0.35);
+        }
+        h1 {
+            margin: 0 0 8px;
+        }
+        h2 {
+            margin-top: 18px;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+        form {
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            background: #f7f8fb;
+            border-radius: 10px;
+        }
+        label {
+            display: inline-block;
+            margin-right: 6px;
+            font-size: 0.9em;
+        }
+        input[type="number"],
+        input[type="text"] {
+            padding: 4px 6px;
+            margin-right: 10px;
+        }
+        input[type="number"] {
+            width: 120px;
+        }
+        button {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: #000000;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        button:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 6px;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #dfe6e9;
+            padding: 5px 7px;
+            text-align: right;
+        }
+        th {
+            background: #000000;
+            color: white;
+        }
+        .left {
+            text-align: left;
+        }
+        .error-msg {
+            color: #c0392b;
+            margin-bottom: 8px;
+        }
+        .interp {
+            margin-top: 6px;
+            font-size: 0.9em;
+            color: #2c3e50;
+        }
+        .back {
+            margin-top: 14px;
+        }
+        a {
+            color: #000000;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Errores numéricos</h1>
+    <p class="subtitle">
+        Cálculo de error absoluto, error relativo y propagación del error
+        para una función numérica simple f(x).
+    </p>
+
+    {% if error %}
+        <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <!-- 1) Cálculo directo: error absoluto y relativo -->
+    <h2>a) Error absoluto y error relativo</h2>
+    <p class="subtitle">
+        Dados un valor verdadero \(x_v\) y un valor aproximado \(x_a\), se calculan:
+        error absoluto \(E_a = |x_v - x_a|\) y error relativo
+        \(e_r = \dfrac{|x_v - x_a|}{|x_v|}\).
+    </p>
+
+    <form method="POST">
+        <input type="hidden" name="mode" value="direct">
+        <label for="x_true">Valor verdadero (x<sub>v</sub>):</label>
+        <input type="number" step="any" name="x_true" id="x_true" required>
+        <label for="x_approx">Valor aproximado (x<sub>a</sub>):</label>
+        <input type="number" step="any" name="x_approx" id="x_approx" required>
+        <button type="submit">Calcular errores</button>
+    </form>
+
+    {% if direct_result %}
+        <table>
+            <tr>
+                <th class="left">Parámetro</th>
+                <th>Valor</th>
+            </tr>
+            <tr>
+                <td class="left">Valor verdadero x<sub>v</sub></td>
+                <td>{{ "%.10f"|format(direct_result.x_true) }}</td>
+            </tr>
+            <tr>
+                <td class="left">Valor aproximado x<sub>a</sub></td>
+                <td>{{ "%.10f"|format(direct_result.x_approx) }}</td>
+            </tr>
+            <tr>
+                <td class="left">Error absoluto E<sub>a</sub> = |x<sub>v</sub> − x<sub>a</sub>|</td>
+                <td>{{ "%.10f"|format(direct_result.abs_error) }}</td>
+            </tr>
+            <tr>
+                <td class="left">
+                    Error relativo e<sub>r</sub> =
+                    |x<sub>v</sub> − x<sub>a</sub>| / |x<sub>v</sub>|
+                </td>
+                <td>
+                    {{ "%.10f"|format(direct_result.rel_error) }}
+                    {% if direct_result.rel_percent is not none %}
+                        (≈ {{ "%.4f"|format(direct_result.rel_percent) }} %)
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <p class="interp">
+            Interpretación: el valor aproximado se desvía
+            {{ "%.10f"|format(direct_result.abs_error) }} unidades respecto al valor verdadero.
+            {% if direct_result.rel_percent is not none %}
+                Esto representa un error relativo de aproximadamente
+                {{ "%.4f"|format(direct_result.rel_percent) }} %.
+            {% endif %}
+        </p>
+    {% endif %}
+
+    <!-- 2) Propagación del error -->
+    <hr>
+    <h2>b) Propagación del error para una función f(x)</h2>
+    <p class="subtitle">
+        Se usa la aproximación lineal: Δy ≈ f'(x)·Δx y se compara con el cambio real
+        Δy = f(x + Δx) − f(x). El estudiante puede elegir una función sencilla,
+        por ejemplo f(x) = sin(x) + x².
+    </p>
+
+    <form method="post" action="{{ url_for('error_analysis') }}" class="form-inline">
+        <input type="hidden" name="mode" value="propagation">
+
+        <div style="margin-top: 10px;">
+            <label>Función f(x):</label>
+            <input type="text"
+                   name="func_str"
+                   placeholder="ej. sin(x) + x**2"
+                   value="{{ func_str or 'sin(x) + x**2' }}"
+                   style="width: 220px; margin-right: 10px;">
+            <small>Usa sintaxis de Python/SymPy: sin(x), cos(x), exp(x), x**2, etc.</small>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <label>Valor medido x:</label>
+            <input type="text" name="x" placeholder="ej. 2"
+                   value="{{ x_val or '' }}" style="width: 120px; margin-right: 20px;">
+
+            <label>Incertidumbre Δx:</label>
+            <input type="text" name="dx" placeholder="ej. 0.01"
+                   value="{{ dx_val or '' }}" style="width: 120px; margin-right: 20px;">
+
+            <button type="submit">Calcular propagación</button>
+        </div>
+    </form>
+
+    {% if prop_result %}
+        <table>
+            <tr>
+                <th class="left">Paso</th>
+                <th>Resultado</th>
+            </tr>
+            <tr>
+                <td class="left">Función ingresada f(x)</td>
+                <td>f(x) = {{ prop_result.function }}</td>
+            </tr>
+            <tr>
+                <td class="left">Derivada simbólica f'(x)</td>
+                <td>f'(x) = {{ prop_result.derivative }}</td>
+            </tr>
+            <tr>
+                <td class="left">Valor de f(x) en x = {{ prop_result.x }}</td>
+                <td>f(x) = {{ "%.10f"|format(prop_result.f_x) }}</td>
+            </tr>
+            <tr>
+                <td class="left">Valor de f'(x) en x = {{ prop_result.x }}</td>
+                <td>f'(x) = {{ "%.10f"|format(prop_result.fpx) }}</td>
+            </tr>
+            <tr>
+                <td class="left">Aproximación lineal: Δy<sub>aprox</sub> ≈ f'(x)·Δx</td>
+                <td>Δy<sub>aprox</sub> = {{ "%.10f"|format(prop_result.dy_aprox) }}</td>
+            </tr>
+            <tr>
+                <td class="left">Cambio real: Δy<sub>real</sub> = f(x + Δx) − f(x)</td>
+                <td>Δy<sub>real</sub> = {{ "%.10f"|format(prop_result.dy_real) }}</td>
+            </tr>
+            <tr>
+                <td class="left">Error absoluto en Δy</td>
+                <td>{{ "%.10f"|format(prop_result.abs_error) }}</td>
+            </tr>
+            <tr>
+                <td class="left">
+                    Error relativo en Δy
+                    (e<sub>r</sub> =
+                    |Δy<sub>real</sub> − Δy<sub>aprox</sub>| /
+                    |Δy<sub>real</sub>|)
+                </td>
+                <td>
+                    {% if prop_result.rel_error is not none %}
+                        {{ "%.10f"|format(prop_result.rel_error) }}
+                    {% else %}
+                        No definido (Δy<sub>real</sub> = 0)
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+
+        <p class="interp">
+            Interpretación: para x = {{ prop_result.x }} con una incertidumbre
+            Δx = {{ prop_result.dx }}, la aproximación lineal produce un cambio
+            Δy ≈ {{ "%.10f"|format(prop_result.dy_aprox) }}, mientras que el cambio
+            real de la función es {{ "%.10f"|format(prop_result.dy_real) }}.
+            La diferencia entre ambos valores (error absoluto) es
+            {{ "%.10f"|format(prop_result.abs_error) }}.
+            {% if prop_result.rel_error is not none %}
+                Además, el error relativo entre la aproximación y el valor real de Δy es
+                {{ "%.10f"|format(prop_result.rel_error) }}.
+            {% endif %}
+        </p>
+    {% endif %}
+
+    <div class="back">
+        <a href="{{ url_for('home') }}">← Volver al inicio</a>
+    </div>
+</div>
+</body>
+</html>

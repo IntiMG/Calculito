@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Errores numéricos y acumulación del error</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 35px;
+            max-width: 1100px;
+            width: 100%;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        .info-box, .concept-box {
+            background: #f4f6f9;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #000000;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
+        .concept-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 30px; }
+        .concept-list h3 { margin-bottom: 4px; color: #000000; font-size: 1em; }
+        .form-section {
+            margin-top: 15px;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #fafafa;
+            border: 1px solid #ecf0f1;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #000000;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid #bdc3c7;
+            font-size: 0.95em;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #000000, #000000);
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        }
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #dfe4ea;
+            padding: 6px 8px;
+            text-align: right;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            text-align: center;
+        }
+        tr:nth-child(even) { background: #f8f9fb; }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #000000;
+            font-weight: 500;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .summary {
+            margin-top: 12px;
+            font-size: 0.9em;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Errores numéricos</h1>
+    <p class="subtitle">Error inherente, redondeo, truncamiento, overflow/underflow y error de modelo.</p>
+
+    <div class="concept-box">
+        <div class="concept-list">
+            <div>
+                <h3>Error inherente</h3>
+                <p>Proviene de los datos de entrada. Los valores que usamos ya traen aproximaciones
+                   (mediciones, tasas redondeadas, etc.).</p>
+            </div>
+            <div>
+                <h3>Error de redondeo</h3>
+                <p>Se produce cuando se ajusta un número al más cercano que puede representarse,
+                   por ejemplo al limitarlo a cierto número de decimales.</p>
+            </div>
+            <div>
+                <h3>Error de truncamiento</h3>
+                <p>Se cortan los decimales sobrantes sin redondear. Genera pequeñas pérdidas de
+                   precisión que pueden acumularse en iteraciones.</p>
+            </div>
+            <div>
+                <h3>Overflow / Underflow</h3>
+                <p>Overflow: el número es demasiado grande y “se sale” del rango (aparece inf).<br>
+                   Underflow: el número es tan pequeño que se aproxima a 0.</p>
+            </div>
+            <div>
+                <h3>Error de modelo matemático</h3>
+                <p>Ocurre cuando la fórmula usada no representa perfectamente la realidad
+                   (modelo simplificado o con supuestos ideales).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>Tabla práctica – acumulación del error</strong>
+        <p style="margin-top: 5px;">
+            La siguiente herramienta genera una tabla similar a la del ejemplo del profesor
+            para una tasa de interés compuesto. Puedes elegir el
+            <strong>tipo de error</strong> (truncamiento o redondeo) y el
+            <strong>número de iteraciones</strong>.
+        </p>
+    </div>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="form-section">
+        <form method="POST" action="{{ url_for('numerical_errors') }}">
+            <div class="form-row">
+                <div>
+                    <label for="capital_inicial">Monto inicial</label>
+                    <input type="number" step="0.01" name="capital_inicial" id="capital_inicial"
+                           value="{{ '%.2f' % capital_inicial }}">
+                </div>
+                <div>
+                    <label for="tasa">Tasa (ej. 0.0625 o 6.25%)</label>
+                    <input type="text" name="tasa" id="tasa"
+                           value="{{ '%.4f' % tasa }}">
+                </div>
+                <div>
+                    <label for="iteraciones">Número de iteraciones</label>
+                    <input type="number" min="1" max="200" name="iteraciones" id="iteraciones"
+                           value="{{ iteraciones }}">
+                </div>
+                <div>
+                    <label for="tipo_error">Tipo de error</label>
+                    <select name="tipo_error" id="tipo_error">
+                        <option value="truncamiento" {% if tipo_error == 'truncamiento' %}selected{% endif %}>
+                            Truncamiento
+                        </option>
+                        <option value="redondeo" {% if tipo_error == 'redondeo' %}selected{% endif %}>
+                            Redondeo
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="decimales">Decimales en el interés aproximado</label>
+                    <input type="number" min="0" max="6" name="decimales" id="decimales"
+                           value="{{ decimales }}">
+                </div>
+            </div>
+
+            <button type="submit">Generar tabla</button>
+        </form>
+    </div>
+
+    {% if filas %}
+        <div class="info-box">
+            <strong>Resultados:</strong>
+            <div class="summary">
+                <p>
+                    Monto inicial: {{ '%.2f' % resumen.capital_inicial }} |
+                    Tasa: {{ '%.4f' % resumen.tasa }} (decimal) |
+                    Iteraciones: {{ resumen.iteraciones }} |
+                    Tipo de error: {{ resumen.tipo_error }} |
+                    Decimales: {{ resumen.decimales }}
+                </p>
+                <p>
+                    Error acumulado total al final: <strong>{{ '%.6f' % resumen.error_total }}</strong>
+                </p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Iteración</th>
+                <th>Monto anterior</th>
+                <th>Interés aprox.</th>
+                <th>Interés real</th>
+                <th>Monto aprox.</th>
+                <th>Monto real</th>
+                <th>Diferencia</th>
+                <th>Error acumulado</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in filas %}
+                <tr>
+                    <td style="text-align:center;">{{ row.iteracion }}</td>
+                    <td>{{ '%.2f' % row.monto_anterior }}</td>
+                    <td>{{ ('%%.%df' % decimales) % row.interes_aprox }}</td>
+                    <td>{{ '%.4f' % row.interes_real }}</td>
+                    <td>{{ '%.2f' % row.monto_aprox }}</td>
+                    <td>{{ '%.4f' % row.monto_real }}</td>
+                    <td>{{ '%.6f' % row.diferencia }}</td>
+                    <td>{{ '%.6f' % row.error_acumulado }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <a href="{{ url_for('home') }}" class="back-link">← Volver al inicio</a>
+</div>
+</body>
+</html>

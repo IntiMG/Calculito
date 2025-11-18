@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notación Posicional (Base 10 y Base 2)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #000000;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 1.05em;
+        }
+
+        .info-box {
+            background: #f4f6f9;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #000000;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #fafafa;
+            border: 1px solid #ecf0f1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #000000, #000000);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .results {
+            margin-top: 10px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f4f6f9;
+            border: 1px solid #ecf0f1;
+        }
+
+        .results h2 {
+            margin-bottom: 10px;
+            color: #000000;
+        }
+
+        .expression {
+            background: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #dcdfe3;
+            margin-bottom: 15px;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 0.95em;
+        }
+
+        ol {
+            margin-left: 20px;
+            padding-left: 5px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #000000;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .examples {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Notación Posicional</h1>
+        <p class="subtitle">Descomposición de números en base 10 y base 2 usando potencias.</p>
+
+        <div class="info-box">
+            <strong>Objetivo de esta sección:</strong>
+            <ul>
+                <li>Descomponer números en base 10 usando potencias de 10.</li>
+                <li>Descomponer números en base 2 usando potencias de 2.</li>
+                <li>Mostrar la multiplicación de cada cifra por su valor posicional.</li>
+                <li>Presentar la suma final de todos los términos.</li>
+            </ul>
+        </div>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <div class="form-section">
+            <form method="POST" action="{{ url_for('positional_notation') }}">
+                <div class="form-group">
+                    <label for="base">Selecciona la base:</label>
+                    <select name="base" id="base">
+                        <option value="10" {% if base == "10" %}selected{% endif %}>Base 10 (decimal)</option>
+                        <option value="2" {% if base == "2" %}selected{% endif %}>Base 2 (binaria)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="numero">Número a descomponer:</label>
+                    {% if base == "2" %}
+                        <input type="text" id="numero" name="numero" required placeholder="Ej: 1111001">
+                    {% else %}
+                        <input type="number" id="numero" name="numero" required placeholder="Ej: 84506">
+                    {% endif %}
+                </div>
+
+                <button type="submit">Descomponer número</button>
+
+                <div class="examples">
+                    <p><strong>Ejemplos sugeridos por el profesor:</strong></p>
+                    <ul>
+                        <li>Base 10: <code>84506</code> → 8 × 10⁴ + 4 × 10³ + 5 × 10² + 0 × 10¹ + 6 × 10⁰</li>
+                        <li>Base 2: <code>1111001</code> → 1 × 2⁶ + 1 × 2⁵ + 1 × 2⁴ + 1 × 2³ + 0 × 2² + 0 × 2¹ + 1 × 2⁰</li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+
+        {% if expresion %}
+            <div class="results">
+                <h2>Resultados de la descomposición (base {{ base }})</h2>
+
+                <div class="expression">
+                    {{ expresion }}
+                </div>
+
+                <h3>Pasos detallados:</h3>
+                <ol>
+                    {% for p in pasos %}
+                        <li>{{ p }}</li>
+                    {% endfor %}
+                </ol>
+
+                {% if base == "2" %}
+                    <p style="margin-top: 10px;">
+                        <strong>Valor decimal resultante:</strong> {{ resultado }}
+                    </p>
+                {% else %}
+                    <p style="margin-top: 10px;">
+                        <strong>Verificación:</strong> La suma de los términos es {{ resultado }}.
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <a href="{{ url_for('home') }}" class="back-link">← Volver al inicio</a>
+    </div>
+</body>
+</html>

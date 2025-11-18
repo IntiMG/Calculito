@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propiedad 5: det(AB) = det(A) × det(B)</title>
+    <style>
+        body { font-family: Arial; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        .subtitle { text-align: center; color: #7f8c8d; margin-bottom: 20px; }
+        .form-group { margin: 15px 0; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; }
+        input, select { padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        .matrix-table { border-collapse: collapse; margin: 10px auto; }
+        .matrix-table td { padding: 6px; text-align: center; }
+        .matrix-table input { width: 70px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { background: #3498db; color: white; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        .btn:hover { background: #2980b9; }
+        .error { background: #fadbd8; color: #c0392b; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .result-block { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .panel { background: #eef5fc; border-radius: 8px; padding: 15px; }
+        .panel h3 { margin-top: 0; }
+        ol { padding-left: 20px; }
+        .final { background: #d5f4e6; padding: 12px; border-radius: 8px; margin-top: 20px; }
+        .two-columns { display: flex; gap: 20px; flex-wrap: wrap; }
+        .col { flex: 1; min-width: 280px; }
+        .btn-group { text-align: center; margin-top: 30px; }
+        a.btn-link { display: inline-block; background: #95a5a6; text-decoration: none; color: #fff; padding: 10px 18px; border-radius: 6px; }
+        a.btn-link:hover { background: #7f8c8d; }
+        .step-card {
+            display: flex;
+            gap: 12px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(0,0,0,0.04);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: #3498db;
+            color: #fff;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .step-body h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+        .step-body p {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: #555;
+        }
+        .step-list {
+            background: rgba(255,255,255,0.6);
+            border-radius: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 6px 10px;
+            border: 1px dashed rgba(0,0,0,0.05);
+        }
+        .step-line {
+            font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12px;
+            background: #f5f7fb;
+            padding: 4px 6px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            white-space: pre-wrap;
+        }
+        .final-det {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .final.ok {
+            background: #d5f4e6;
+        }
+        .final.fail {
+            background: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Propiedad multiplicativa del determinante</h1>
+    <p class="subtitle">Comprueba que det(AB) = det(A) × det(B) ingresando dos matrices cuadradas del mismo orden.</p>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if not rows and not cols %}
+    <!-- PASO 1: pedir tamaño -->
+    <form method="POST" action="{{ url_for('determinant_property5') }}">
+        <div class="form-group">
+            <label for="rows">Número de filas/columnas (n×n):</label>
+            <input type="number" id="rows" name="rows" min="1" max="6" required placeholder="Ej: 3">
+        </div>
+        <input type="hidden" name="cols" value="{{ rows if rows else '' }}">
+        <button type="submit" class="btn">Continuar</button>
+    </form>
+    {% endif %}
+
+    {% if rows and not result %}
+    <!-- PASO 2: pedir valores de A y B -->
+    <form method="POST" action="{{ url_for('determinant_property5') }}">
+        <input type="hidden" name="rows" value="{{ rows }}">
+        <input type="hidden" name="cols" value="{{ rows }}">
+
+        <div class="two-columns">
+            <div class="col">
+                <h3>Matriz A ({{ rows }}×{{ rows }})</h3>
+                <table class="matrix-table">
+                    {% for i in range(rows) %}
+                    <tr>
+                        {% for j in range(rows) %}
+                        <td>
+                            <input type="text" name="A_{{ i }}_{{ j }}" placeholder="a{{ i+1 }}{{ j+1 }}">
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="col">
+                <h3>Matriz B ({{ rows }}×{{ rows }})</h3>
+                <table class="matrix-table">
+                    {% for i in range(rows) %}
+                    <tr>
+                        {% for j in range(rows) %}
+                        <td>
+                            <input type="text" name="B_{{ i }}_{{ j }}" placeholder="b{{ i+1 }}{{ j+1 }}">
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <button type="submit" class="btn">Verificar Propiedad</button>
+    </form>
+    {% endif %}
+
+    {% if result %}
+        <div class="result-block">
+            <div class="panel">
+                <h3>Lado izquierdo: det(AB)</h3>
+
+                <!-- Bloque 1: multiplicación -->
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-body">
+                        <h4>Multiplicación de matrices A · B</h4>
+                        <p>Se calcula cada elemento C[i][j] = Σ A[i][k] · B[k][j].</p>
+                    </div>
+                </div>
+
+                <!-- Ahora imprimimos los pasos tal cual vienen -->
+                <div class="step-list">
+                    {% for step in result.lhs.steps %}
+                        <div class="step-line">{{ step | safe }}</div>
+                    {% endfor %}
+                </div>
+
+
+                <p class="final-det"><strong>det(AB) = {{ result.lhs.det }}</strong></p>
+            </div>
+
+            <div class="panel">
+                <h3>Lado derecho: det(A) × det(B)</h3>
+
+                <!-- Bloque 1: det(A) -->
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-body">
+                        <h4>Cálculo de det(A)</h4>
+                        <p>Usando el mismo método (cofactores) que para AB.</p>
+                    </div>
+                </div>
+
+                <!-- Pasos lado derecho -->
+                <div class="step-list">
+                    {% for step in result.rhs.steps %}
+                        <div class="step-line">{{ step | safe }}</div>
+                    {% endfor %}
+                </div>
+
+                <p class="final-det">
+                    <strong>det(A) = {{ result.rhs.detA }}</strong><br>
+                    <strong>det(B) = {{ result.rhs.detB }}</strong><br>
+                    <strong>det(A) × det(B) = {{ result.rhs.product }}</strong>
+                </p>
+            </div>
+        </div>
+
+        <div class="final {% if result.same %}ok{% else %}fail{% endif %}">
+            {% if result.same %}
+                <p><strong>Propiedad 5 verificada ✅</strong></p>
+                <p>Se comprobó que det(AB) y det(A)×det(B) son iguales.</p>
+            {% else %}
+                <p><strong>La propiedad no se verificó ❌</strong></p>
+                <p>Los valores obtenidos no coinciden.</p>
+            {% endif %}
+        </div>
+
+        <h3 style="margin-top: 30px; text-align:center;">Matrices ingresadas</h3>
+        <div class="two-columns">
+            <div class="col">
+                <p><strong>Matriz A:</strong></p>
+                <table class="matrix-table">
+                    {% for row in matrixA %}
+                    <tr>
+                        {% for val in row %}
+                        <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="col">
+                <p><strong>Matriz B:</strong></p>
+                <table class="matrix-table">
+                    {% for row in matrixB %}
+                    <tr>
+                        {% for val in row %}
+                        <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <a href="{{ url_for('determinant_property5') }}" class="btn-link">Nueva verificación</a>
+            <a href="{{ url_for('home') }}" class="btn-link">Volver al menú</a>
+        </div>
+    {% endif %}
+
+</div>
+</body>
+</html>

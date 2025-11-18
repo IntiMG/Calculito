@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dependencia / Independencia</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Dependencia / Independencia Lineal</h1>
+    <p>Ingresa m vectores en ℝⁿ. Verificaremos si son independientes resolviendo A c = 0.</p>
+  </div>
+
+  {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+
+  {% if step == 1 %}
+  <div class="card">
+    <div class="step-indicator"><div class="step active">1</div><div class="step">2</div><div class="step">3</div></div>
+    <form method="post">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Dimensión n</label><input class="form-input" type="number" name="dimension" min="1" max="10" required></div>
+        <div class="form-group"><label class="form-label"># de vectores m</label><input class="form-input" type="number" name="num_vectors" min="1" max="10" required></div>
+      </div>
+      <div class="btn-group"><button class="btn btn-primary" type="submit">Continuar</button></div>
+    </form>
+    <div class="btn-group" style="margin-top:1rem;"><a href="{{ url_for('home') }}" class="btn btn-secondary">Volver</a></div>
+  </div>
+
+  {% elif step == 2 %}
+  <div class="card">
+    <div class="step-indicator"><div class="step completed">1</div><div class="step active">2</div><div class="step">3</div></div>
+
+    <form method="post" action="/solve_dependence">
+      <input type="hidden" name="dimension" value="{{ dimension }}">
+      <input type="hidden" name="num_vectors" value="{{ num_vectors }}">
+
+      <div class="matrix-container">
+        <p class="math-notation">Ingresa los m vectores como <b>columnas</b> de A (n×m). Se resolverá A c = 0.</p>
+        <table class="matrix-table">
+          {% for i in range(dimension) %}
+          <tr>
+            {% for j in range(num_vectors) %}
+              <td><input class="matrix-cell" name="v_{{ i }}_{{ j }}" placeholder="v{{ j+1 }}{{ i+1 }}" required></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+      <div class="btn-group"><button class="btn btn-primary" type="submit">Evaluar</button></div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

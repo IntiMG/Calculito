@@ -24,12 +24,11 @@
         .container {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 900px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            padding: 35px 40px 30px;
+            max-width: 1100px;
             width: 100%;
             animation: fadeIn 0.6s ease-out;
-            text-align: center;
         }
 
         @keyframes fadeIn {
@@ -37,60 +36,213 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
         h1 {
             color: #000000;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-            font-weight: 300;
+            margin-bottom: 8px;
+            font-size: 2.4em;
+            font-weight: 600;
         }
 
-        p {
-            color: #000000;
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-top: 10px;
+        }
+
+        .section-card {
+            background: #f7f8fb;
+            border-radius: 16px;
+            padding: 18px 20px 16px;
+            border-left: 4px solid #000000;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .section-title {
             font-size: 1.2em;
-            margin-bottom: 30px;
+            font-weight: 600;
+            color: #000000;
         }
 
-        ul {
+        .section-tag {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #7f8c8d;
+        }
+
+        .section-desc {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 12px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 10px;
             list-style: none;
-            padding: 0;
         }
 
-        li {
-            margin: 15px 0;
-        }
-
-        a {
+        .tool-link {
             background: linear-gradient(135deg, #000000, #000000);
             color: white;
-            padding: 15px 30px;
+            padding: 10px 14px;
             border-radius: 10px;
-            font-size: 1.1em;
+            font-size: 0.95em;
             font-weight: 500;
             text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
+            display: block;
+            text-align: center;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        a:hover {
+        .tool-link:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(184, 169, 217, 0.3);
+            box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+        }
+
+        footer {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #95a5a6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 18px 22px;
+            }
+            h1 {
+                font-size: 1.9em;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Calculadora de Álgebra Lineal</h1>
-        <p>Elige una herramienta:</p>
-        <ul>
-            <li><a href="/linear_system">Resolver Sistemas de Ecuaciones Lineales</a></li>
-            <li><a href="/properties">Propiedades Algebraicas de ℝⁿ</a></li>
-            <li><a href="/vector_ops">Operaciones con Vectores</a></li>
-            <li><a href="/linear_combination">Combinación Lineal de Vectores</a></li>
-            <li><a href="/vector_equation">Ecuación Vectorial</a></li>
-            <li><a href="/matvec">Multiplicación Matriz x Vector</a></li>
-            <li><a href="/matrix_equation">Ecuación Matricial</a></li>
-            <li><a href="/homogeneous">Sistemas Homogéneos y Dependencia Lineal</a></li>
-        </ul>
+        <header>
+            <h1>Calculadora de Álgebra Lineal</h1>
+            <p class="subtitle">
+                Módulo académico para sistemas de ecuaciones, matrices, métodos numéricos y análisis de errores.
+            </p>
+        </header>
+
+        <main>
+
+            <!-- SECCIÓN 1: ÁLGEBRA LINEAL -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Álgebra Lineal</h2>
+                    <span class="section-tag">Vectores · Sistemas · Interpretación</span>
+                </div>
+                <p class="section-desc">
+                    Herramientas para trabajar con sistemas de ecuaciones, combinaciones lineales e interpretaciones
+                    geométricas en ℝⁿ.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/linear_system">Resolver Sistemas de Ecuaciones</a></li>
+                    <li><a class="tool-link" href="/linear_combination">Combinación Lineal</a></li>
+                    <li><a class="tool-link" href="/vector_equation">Ecuación Vectorial</a></li>
+                    <li><a class="tool-link" href="/matvec">Multiplicación Matriz × Vector</a></li>
+                    <li><a class="tool-link" href="/matrix_equation">Ecuación Matricial (AX = B)</a></li>
+                    <li><a class="tool-link" href="/homogeneous">Sistema Homogéneo (AX = 0)</a></li>
+                    <li><a class="tool-link" href="/properties">Propiedades Algebraicas de ℝⁿ</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 2: OPERACIONES CON MATRICES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Operaciones con Matrices</h2>
+                    <span class="section-tag">Aritmética · Transpuesta · Inversa</span>
+                </div>
+                <p class="section-desc">
+                    Módulos paso a paso para ver cómo se construyen las operaciones básicas y propiedades matriciales.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/matrix_operations">Operaciones Aritméticas (vista general)</a></li>
+                    <li><a class="tool-link" href="/matrix_add">Suma de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_subtract">Resta de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_scalar">Multiplicación por Escalar</a></li>
+                    <li><a class="tool-link" href="/matrix_multiply">Multiplicación Matricial</a></li>
+                    <li><a class="tool-link" href="/matrix_transpose">Transpuesta de una Matriz</a></li>
+                    <li><a class="tool-link" href="/matrix_inverse">Inversa por Gauss–Jordan</a></li>
+                    <li><a class="tool-link" href="/matrix_properties">Verificar Propiedades de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_identities">Identidades Matriciales</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 3: DETERMINANTES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Determinantes</h2>
+                    <span class="section-tag">Det(A) · Propiedades · Cramer</span>
+                </div>
+                <p class="section-desc">
+                    Cálculo detallado del determinante, propiedades importantes y aplicación al método de Cramer.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/determinant">Calcular Determinante (con pasos)</a></li>
+                    <li><a class="tool-link" href="/determinant/property5">Propiedad 5: det(A·B) = det(A)·det(B)</a></li>
+                    <li><a class="tool-link" href="/cramer">Método de Cramer</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 4: REPRESENTACIÓN NUMÉRICA -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Representación Numérica</h2>
+                    <span class="section-tag">Bases · Notación Posicional</span>
+                </div>
+                <p class="section-desc">
+                    Análisis de cómo se representan los números en distintas bases y su descomposición posicional.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/positional_notation">Notación Posicional (Base 10 y Base 2)</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 5: MÉTODOS NUMÉRICOS Y ERRORES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Métodos Numéricos y Errores</h2>
+                    <span class="section-tag">Truncamiento · Redondeo · Punto flotante</span>
+                </div>
+                <p class="section-desc">
+                    Módulos dedicados a errores numéricos, acumulación de error y representación en punto flotante con NumPy.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/numerical_errors">Errores numéricos + Tabla de truncamiento</a></li>
+                    <li><a class="tool-link" href="/floating_point">Errores en punto flotante (0.1 + 0.2 == 0.3)</a></li>
+                    <li><a class="tool-link" href="/numpy_workshop">Taller NumPy: pérdidas de precisión</a></li>
+                    <li><a class="tool-link" href="/error_analysis">Errores: absoluto, relativo y propagación</a></li>
+                </ul>
+            </section>
+
+        </main>
+
+        <footer>
+            Proyecto académico – Calculadora de Álgebra Lineal · UAM
+        </footer>
     </div>
 </body>
 </html>
