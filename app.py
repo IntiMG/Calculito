@@ -7,9 +7,12 @@ from models.determinant import calculate_determinant  # <-- CORRECTO
 from fractions import Fraction
 from models.determinant import determinant_product_property
 from models.positional_notation import PositionalNotation
-from models.numerical_errors import ErrorAnalysis
+from models.numerical_errors import NumericalErrors
 from models.floating_point_demo import FloatingPointDemo
 from models.numpy_workshop import NumpyWorkshop
+from models.error_analysis import ErrorAnalysis
+from copy import deepcopy
+from types import SimpleNamespace
 
 
 app = Flask(__name__)
@@ -43,8 +46,6 @@ def safe_fraction(val):
     return Fraction(s)
 
 # ========= Helpers para Gauss-Jordan (sin NumPy) =========
-from copy import deepcopy
-
 def identity(n):
     from fractions import Fraction
     I = [[Fraction(0) for _ in range(n)] for __ in range(n)]
@@ -1925,7 +1926,7 @@ def numerical_errors():
             decimales = int(request.form.get("decimales", "2"))
 
             # Generar tabla
-            filas = ErrorAnalysis.generar_tabla_interes_compuesto(
+            filas = NumericalErrors.generar_tabla_interes_compuesto(
                 capital_inicial=capital_inicial,
                 tasa=tasa,
                 iteraciones=iteraciones,
@@ -2015,6 +2016,70 @@ def numpy_workshop():
         results=results,
         n_reps=n_reps
     )
+
+@app.route("/error_analysis", methods=["GET", "POST"])
+def error_analysis():
+    error = None
+    direct_result = None
+    prop_result = None
+    func_str = None
+    x_val = None
+    dx_val = None
+
+    if request.method == "POST":
+        mode = request.form.get("mode", "direct")
+
+        # ------------------ MODO 1: cálculo directo ------------------
+        if mode == "direct":
+            try:
+                x_true_str = request.form.get("x_true", "").strip()
+                x_approx_str = request.form.get("x_approx", "").strip()
+
+                x_true = float(x_true_str)
+                x_approx = float(x_approx_str)
+
+                Ea, Er, Er_pct = ErrorAnalysis.direct_errors(x_true, x_approx)
+
+                direct_result = SimpleNamespace(
+                    x_true=x_true,
+                    x_approx=x_approx,
+                    abs_error=Ea,
+                    rel_error=Er,
+                    rel_percent=Er_pct,
+                )
+            except ValueError:
+                error = "Por favor ingresa números válidos (pueden ser decimales)."
+
+        # ------------------ MODO 2: propagación del error ------------ 
+        elif mode == "propagation":
+            func_str = request.form.get("func_str", "sin(x) + x**2").strip()
+            x_val = request.form.get("x", "").strip()
+            dx_val = request.form.get("dx", "").strip()
+
+            try:
+                x = float(x_val)
+                dx = float(dx_val)
+            except ValueError:
+                error = "Por favor ingresa números válidos (pueden ser decimales)."
+            else:
+                try:
+                    # devuelve dict con las claves:
+                    # f_x, fpx, dy_aprox, dy_real, abs_error, rel_error, x, dx
+                    data = ErrorAnalysis.propagation(func_str, x, dx)
+                    prop_result = SimpleNamespace(**data)
+                except Exception as e:
+                    error = f"Error al procesar la función: {e}"
+
+    return render_template(
+        "error_analysis.html",
+        error=error,
+        direct_result=direct_result,
+        prop_result=prop_result,
+        func_str=func_str,
+        x_val=x_val,
+        dx_val=dx_val,
+    )
+
 
 
 def fraction_to_string(matrix):

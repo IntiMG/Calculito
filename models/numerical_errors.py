@@ -86,7 +86,7 @@ class IterationRow:
     error_acumulado: float
 
 
-class ErrorAnalysis:
+class NumericalErrors:
     """
     Clase con utilidades para analizar errores numéricos.
 
