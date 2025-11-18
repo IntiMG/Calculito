@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Taller NumPy – Pérdida de precisión</title>
+    <style>
+        body {
+            background: #000000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 30px 10px;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 25px 30px 20px;
+            max-width: 1000px;
+            width: 100%;
+            box-shadow: 0 18px 35px rgba(0,0,0,0.35);
+        }
+        h1 {
+            margin: 0 0 8px;
+            color: #000;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            margin-bottom: 18px;
+        }
+        form {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            background: #f7f8fb;
+            border-radius: 10px;
+        }
+        label {
+            font-size: 0.9em;
+        }
+        input[type="number"] {
+            padding: 4px 6px;
+            margin-left: 5px;
+            width: 80px;
+        }
+        button {
+            margin-left: 10px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: none;
+            background: #000;
+            color: #fff;
+            cursor: pointer;
+        }
+        button:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        .error {
+            color: #c0392b;
+            margin-bottom: 8px;
+        }
+        .exp-card {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: #f7f8fb;
+        }
+        .exp-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .exp-desc {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 6px;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #dfe6e9;
+            padding: 5px 7px;
+            text-align: right;
+        }
+        th {
+            background: #000000;
+            color: white;
+        }
+        .exact-row {
+            background: #ecf0f1;
+            font-weight: 600;
+        }
+        .rep-col {
+            text-align: left;
+        }
+        a {
+            color: #000;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .back {
+            margin-top: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Taller NumPy – Pérdida de precisión</h1>
+    <p class="subtitle">
+        Aplicar operaciones numéricas que muestren las pérdidas de precisión y cómo NumPy maneja números flotantes
+        y errores asociados.
+    </p>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <label for="n_reps">
+            Número de repeticiones para sumar 0.1:
+        </label>
+        <input type="number" name="n_reps" id="n_reps" min="1" value="{{ n_reps }}">
+        <button type="submit">Ejecutar taller</button>
+    </form>
+
+    {% if results %}
+        {% for exp in results %}
+            <div class="exp-card">
+                <div class="exp-title">{{ exp.title }}</div>
+                <div class="exp-desc">{{ exp.description }}</div>
+
+                <table>
+                    <tr>
+                        <th class="rep-col">Representación</th>
+                        <th>Valor</th>
+                        <th>Error absoluto |valor − exacto|</th>
+                    </tr>
+                    <tr class="exact-row">
+                        <td class="rep-col">Valor “ideal” (exacto)</td>
+                        <td>{{ "%.15f"|format(exp.exact) }}</td>
+                        <td>0.000000000000000</td>
+                    </tr>
+                    <tr>
+                        <td class="rep-col">Python (float estándar)</td>
+                        <td>{{ "%.15f"|format(exp.python.value) }}</td>
+                        <td>{{ "%.15f"|format(exp.python.abs_error) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="rep-col">NumPy float32</td>
+                        <td>{{ "%.15f"|format(exp.np32.value) }}</td>
+                        <td>{{ "%.15f"|format(exp.np32.abs_error) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="rep-col">NumPy float64</td>
+                        <td>{{ "%.15f"|format(exp.np64.value) }}</td>
+                        <td>{{ "%.15f"|format(exp.np64.abs_error) }}</td>
+                    </tr>
+                </table>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="back">
+        <a href="{{ url_for('home') }}">← Volver al inicio</a>
+    </div>
+</div>
+</body>
+</html>

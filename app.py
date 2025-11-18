@@ -9,6 +9,7 @@ from models.determinant import determinant_product_property
 from models.positional_notation import PositionalNotation
 from models.numerical_errors import ErrorAnalysis
 from models.floating_point_demo import FloatingPointDemo
+from models.numpy_workshop import NumpyWorkshop
 
 
 app = Flask(__name__)
@@ -1991,6 +1992,28 @@ def floating_point():
         b_str=b_str,
         c_str=c_str,
         result=result,
+    )
+
+@app.route("/numpy_workshop", methods=["GET", "POST"])
+def numpy_workshop():
+    error = None
+    results = None
+    n_reps = 10  # valor por defecto
+
+    if request.method == "POST":
+        try:
+            n_reps = int(request.form.get("n_reps", "10"))
+            if n_reps <= 0 or n_reps > 1_000_000:
+                raise ValueError("El número de repeticiones debe ser un entero positivo razonable.")
+            results = NumpyWorkshop.run(n_reps)
+        except Exception as e:
+            error = f"Error: {str(e)}"
+
+    return render_template(
+        "numpy_workshop.html",
+        error=error,
+        results=results,
+        n_reps=n_reps
     )
 
 
