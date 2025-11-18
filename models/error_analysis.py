@@ -1,9 +1,11 @@
 # models/error_analysis.py
 import math
+#aqui da error esto
 from sympy import symbols, sympify, diff
 
 class ErrorAnalysis:
 
+#NOTA: paso a paso para todos los errores
     @staticmethod
     def direct_errors(x_true: float, x_approx: float):
         """
