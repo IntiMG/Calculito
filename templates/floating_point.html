@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Números en punto flotante</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 35px;
+            max-width: 950px;
+            width: 100%;
+            animation: fadeIn 0.6s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        .info-box, .code-box {
+            background: #f4f6f9;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #000000;
+            font-size: 0.95em;
+            color: #2c3e50;
+        }
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+        pre {
+            background: #2d3436;
+            color: #ecf0f1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+        .form-section {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            padding: 18px;
+            border-radius: 12px;
+            background: #fafafa;
+            border: 1px solid #ecf0f1;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #000000;
+        }
+        input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid #bdc3c7;
+            font-size: 0.95em;
+            outline: none;
+            transition: 0.2s;
+        }
+        input:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #000000, #000000);
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+        }
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        th, td {
+            border: 1px solid #dfe4ea;
+            padding: 6px 8px;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            text-align: center;
+        }
+        td {
+            text-align: right;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #000000;
+            font-weight: 500;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .highlight-false {
+            color: #c0392b;
+            font-weight: bold;
+        }
+        .highlight-true {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Números en punto flotante</h1>
+    <p class="subtitle">Demostración de que la computadora no representa exactamente los números reales.</p>
+
+    <div class="info-box">
+        <strong>Idea principal:</strong>
+        <ul>
+            <li>Los números reales se guardan en <strong>binario</strong> (base 2) con un número finito de bits.</li>
+            <li>Fracciones “bonitas” en base 10, como 0.1 o 0.2, se vuelven <em>infinitas periódicas</em> en base 2.</li>
+            <li>Por eso, 0.1, 0.2 y 0.3 se almacenan como <strong>aproximaciones</strong>, no como valores exactos.</li>
+            <li>La comparación con <code>==</code> exige igualdad exacta bit a bit, lo cual casi nunca ocurre en estos casos.</li>
+        </ul>
+    </div>
+
+    <div class="code-box">
+        <p><strong>Ejemplo obligatorio del profesor (Python puro):</strong></p>
+        <pre><code>print(0.1 + 0.2 == 0.3)</code></pre>
+        {% if result %}
+            <p>En esta implementación, esa línea imprimiría:
+                {% if result.equal %}
+                    <span class="highlight-true">True</span>
+                {% else %}
+                    <span class="highlight-false">False</span>
+                {% endif %}
+            </p>
+        {% endif %}
+        <p style="margin-top:5px;">
+            El resultado suele ser <strong>False</strong> porque internamente
+            <code>0.1</code>, <code>0.2</code> y <code>0.3</code> no son exactamente
+            esos valores, sino aproximaciones en formato IEEE 754.
+        </p>
+    </div>
+
+    <div class="code-box">
+        <p><strong>Forma recomendada en cómputo científico (NumPy):</strong></p>
+        <pre><code>import numpy as np
+
+a = 0.1
+b = 0.2
+c = 0.3
+
+print(a + b == c)          # comparación exacta
+print(np.isclose(a + b, c))  # comparación con tolerancia</code></pre>
+        {% if result %}
+            <p>
+                En esta calculadora:
+                <br>
+                <code>a + b == c</code> →
+                {% if result.equal %}
+                    <span class="highlight-true">True</span>
+                {% else %}
+                    <span class="highlight-false">False</span>
+                {% endif %}
+                <br>
+                <code>np.isclose(a + b, c)</code> →
+                {% if result.isclose %}
+                    <span class="highlight-true">True</span>
+                {% else %}
+                    <span class="highlight-false">False</span>
+                {% endif %}
+                (con rtol = {{ result.rtol }}, atol = {{ result.atol }})
+            </p>
+        {% endif %}
+    </div>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="form-section">
+        <p style="margin-bottom:10px;">
+            Puedes modificar los valores y analizar si <code>a + b == c</code> se cumple exactamente
+            y si <code>np.isclose(a + b, c)</code> lo considera “suficientemente cercano”.
+        </p>
+        <form method="POST" action="{{ url_for('floating_point') }}">
+            <div class="form-row">
+                <div>
+                    <label for="a">a</label>
+                    <input type="text" name="a" id="a" value="{{ a_str }}">
+                </div>
+                <div>
+                    <label for="b">b</label>
+                    <input type="text" name="b" id="b" value="{{ b_str }}">
+                </div>
+                <div>
+                    <label for="c">c (valor esperado)</label>
+                    <input type="text" name="c" id="c" value="{{ c_str }}">
+                </div>
+            </div>
+            <button type="submit">Analizar a + b == c</button>
+        </form>
+    </div>
+
+    {% if result %}
+        <div class="two-columns">
+            <div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Valor</th>
+                        <th>Decimal “natural”</th>
+                        <th>Representación interna (.20f)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td style="text-align:center;">a</td>
+                        <td>{{ result.a }}</td>
+                        <td>{{ result.a_repr }}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;">b</td>
+                        <td>{{ result.b }}</td>
+                        <td>{{ result.b_repr }}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;">c</td>
+                        <td>{{ result.c }}</td>
+                        <td>{{ result.c_repr }}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center;">a + b</td>
+                        <td>{{ result.sum_ab }}</td>
+                        <td>{{ result.sum_repr }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box" style="margin-top:15px;">
+                    <p>
+                        <strong>Comparación exacta:</strong><br>
+                        <code>a + b == c</code> →
+                        {% if result.equal %}
+                            <span class="highlight-true">True</span>
+                        {% else %}
+                            <span class="highlight-false">False</span>
+                        {% endif %}
+                    </p>
+                    <p style="margin-top:5px;">
+                        <strong>Error absoluto:</strong>
+                        <code>(a + b) - c = {{ "%.20f"|format(result.diff) }}</code>
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <div class="info-box">
+                    <p><strong>Precisión y epsilon de máquina (NumPy):</strong></p>
+                    <p>
+                        <code>np.finfo(np.float64).eps ≈ {{ "{:.2e}".format(result.eps_float64) }}</code><br>
+                        <code>np.finfo(np.float32).eps ≈ {{ "{:.2e}".format(result.eps_float32) }}</code>
+                    </p>
+                    <p style="margin-top:5px;">
+                        Esto representa la <em>distancia</em> entre 1.0 y el siguiente número representable.
+                        Es una medida de la precisión máxima del tipo de dato.
+                    </p>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>Comparación float32 vs float64:</strong></p>
+                    <p>
+                        Suma en float32:
+                        <br>
+                        <code>np.float32(a) + np.float32(b)</code> ≈ {{ result.sum32_repr }}
+                    </p>
+                    <p style="margin-top:5px;">
+                        Suma en float64:
+                        <br>
+                        <code>np.float64(a) + np.float64(b)</code> ≈ {{ result.sum64_repr }}
+                    </p>
+                    <p style="margin-top:5px;">
+                        En problemas muy sensibles al error, el tipo de dato (float32 vs float64)
+                        puede cambiar el resultado en las últimas cifras decimales.
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <a href="{{ url_for('home') }}" class="back-link">← Volver al inicio</a>
+</div>
+</body>
+</html>

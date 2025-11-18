@@ -8,6 +8,7 @@ from fractions import Fraction
 from models.determinant import determinant_product_property
 from models.positional_notation import PositionalNotation
 from models.numerical_errors import ErrorAnalysis
+from models.floating_point_demo import FloatingPointDemo
 
 
 app = Flask(__name__)
@@ -1954,6 +1955,42 @@ def numerical_errors():
         iteraciones=iteraciones,
         decimales=decimales,
         tipo_error=tipo_error,
+    )
+
+@app.route("/floating_point", methods=["GET", "POST"])
+def floating_point():
+    error = None
+    result = None
+
+    # Valores por defecto: ejemplo obligatorio del profesor
+    a_str = "0.1"
+    b_str = "0.2"
+    c_str = "0.3"
+
+    if request.method == "POST":
+        # El usuario puede cambiar los valores para probar otros casos
+        a_str = request.form.get("a", "0.1").strip()
+        b_str = request.form.get("b", "0.2").strip()
+        c_str = request.form.get("c", "0.3").strip()
+
+        try:
+            a = float(a_str)
+            b = float(b_str)
+            c = float(c_str)
+            result = FloatingPointDemo.analyze(a, b, c)
+        except ValueError:
+            error = "Ingresa números válidos usando punto decimal (ej. 0.125, 1.5, etc.)."
+    else:
+        # GET → usamos directamente el ejemplo 0.1 + 0.2 == 0.3
+        result = FloatingPointDemo.analyze(0.1, 0.2, 0.3)
+
+    return render_template(
+        "floating_point.html",
+        error=error,
+        a_str=a_str,
+        b_str=b_str,
+        c_str=c_str,
+        result=result,
     )
 
 
