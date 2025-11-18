@@ -1,3 +1,7 @@
+from flask import Flask, render_template, request, redirect, url_for
+from models.binary_operations import dec_to_bin, get_hex_conversion_table, hex_to_bin_proc, get_signed_c2, floating_point
+import numpy as np
+#from scipy import linalg
 from flask import Flask, render_template, request, url_for, session, redirect
 from models.equations_solver import Gauss
 from models.properties import Properties
@@ -14,9 +18,11 @@ from models.error_analysis import ErrorAnalysis
 from copy import deepcopy
 from types import SimpleNamespace
 
-
 app = Flask(__name__)
+#cod anterior
 app.secret_key = 'a_secret_key'  # Required for session
+
+#Funciones cod anterior
 
 # ========= Filtros Jinja para formatear fracciones y vectores =========
 def _fmt_num(x, tol=1e-9):
@@ -634,7 +640,7 @@ PROP_META.update({
     }
 })
 
-
+# ========= Filtros Jinja =========
 
 @app.template_filter("fmt_num")
 def jinja_fmt_num(x):
@@ -645,12 +651,13 @@ def jinja_fmt_vec(vec):
     return "[" + ", ".join(_fmt_num(v) for v in vec) + "]"
 
 
-# ========= Rutas Existentes =========
+
+#Rutas de la aplicacion flask
 @app.route("/", methods=["GET"])
 def home():
-    return render_template("home.html")
+    return render_template("index.html")
 
-# Ruta para sistemas de ecuaciones lineales
+#1
 @app.route("/linear_system", methods=["GET", "POST"])
 def linear_system():
     if request.method == "POST":
@@ -662,14 +669,14 @@ def linear_system():
                 num_vars = int(num_vars)
                 num_eqs = int(num_eqs)
                 if num_vars <= 0 or num_eqs <= 0 or num_vars > 10 or num_eqs > 10:
-                    return render_template("index.html", step=1, error="El número de variables y ecuaciones debe ser entre 1 y 10.")
-                return render_template("index.html", num_vars=num_vars, num_eqs=num_eqs, step=2)
+                    return render_template("sistema_ecuaciones.html", error="El número de variables y ecuaciones debe ser entre 1 y 10.", step=1)
+                return render_template("sistema_ecuaciones.html", num_vars=num_vars, num_eqs=num_eqs, step=2)
             except ValueError:
-                return render_template("index.html", step=1, error="Por favor, ingrese números válidos.")
+                return render_template("sistema_ecuaciones.html", error="Por favor, ingrese números válidos.", step=1)
         else:
-            return render_template("index.html", step=1, error="Por favor, complete todos los campos.")
+            return render_template("sistema_ecuaciones.html", error="Por favor, complete todos los campos.", step=1)
 
-    return render_template("index.html", step=1)
+    return render_template("sistema_ecuaciones.html", step=1)
 
 @app.route("/solve", methods=["POST"])
 def solve_linear_system():
@@ -677,15 +684,15 @@ def solve_linear_system():
     num_eqs = request.form.get("num_eqs")
 
     if not num_vars or not num_eqs:
-        return render_template("index.html", step=1, error="Error: Número de variables o ecuaciones no proporcionado.")
+        return render_template("sistema_ecuaciones.html", error="Error: Número de variables o ecuaciones no proporcionado.", step=1)
 
     try:
         num_vars = int(num_vars)
         num_eqs = int(num_eqs)
         if num_vars <= 0 or num_eqs <= 0:
-            return render_template("index.html", step=1, error="El número de variables y ecuaciones debe ser mayor que 0.")
+            return render_template("sistema_ecuaciones.html", error="El número de variables y ecuaciones debe ser mayor que 0.", step=1)
     except ValueError:
-        return render_template("index.html", step=1, error="Error: Número de variables o ecuaciones no válido.")
+        return render_template("sistema_ecuaciones.html", error="Error: Número de variables o ecuaciones no válido.", step=1)
 
     matrix = []
     try:
@@ -694,44 +701,34 @@ def solve_linear_system():
             for j in range(num_vars + 1):
                 val = request.form.get(f"cell_{i}_{j}")
                 if val is None:
-                    return render_template("index.html", step=1, error=f"Error: Falta el valor en la celda ({i}, {j}).")
+                    return render_template("sistema_ecuaciones.html", error=f"Error: Falta el valor en la celda ({i}, {j}).", step=2, num_vars=num_vars, num_eqs=num_eqs)
                 row.append(float(val))
             matrix.append(row)
     except ValueError:
-        return render_template("index.html", step=1, error="Error: Ingrese valores numéricos válidos en la matriz.")
+        return render_template("sistema_ecuaciones.html", error="Error: Ingrese valores numéricos válidos en la matriz.", step=2, num_vars=num_vars, num_eqs=num_eqs)
 
     coefficients = [row[:-1] for row in matrix]
     results = [row[-1] for row in matrix]
 
-    if len(coefficients) != num_eqs or any(len(row) != num_vars for row in coefficients):
-        return render_template("index.html", step=1, error="Error: Dimensiones de la matriz no válidas.")
-    if len(results) != num_eqs:
-        return render_template("index.html", step=1, error="Error: Vector de resultados no válido.")
-
     try:
-        gauss_solver = Gauss(coefficients, results, use_fractions=True)
-        solution = gauss_solver.get_formatted_solution()
-        steps = gauss_solver.get_steps()
-        info = gauss_solver.get_classification()
-        pivot_report = gauss_solver.get_pivot_report()
-
+        A = np.array(coefficients, dtype=float)
+        b = np.array(results, dtype=float)
+        solution = np.linalg.solve(A, b)
+        
         return render_template(
-            "result.html",
+            "sistema_ecuaciones.html",
             solution=solution,
-            steps=steps,
-            consistent=info["consistent"],
-            tipo=("Única" if info["status"] == "unique" else ("Infinitas" if info["status"] == "infinite" else "Ninguna")),
-            rank=info["rank"],
-            n=info["n"],
-            pivot_report=pivot_report,
-            back_url=url_for("linear_system")
+            step=3,
+            enumerate=enumerate
         )
     except Exception as e:
-        error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
-        return render_template("index.html", step=1, error=f"Error al resolver el sistema: {error_msg}")
+        return render_template("sistema_ecuaciones.html", error=f"Error al resolver el sistema: {str(e)}", step=2, num_vars=num_vars, num_eqs=num_eqs)
 
+#aqui esta las rutas del cod anterior 
 # Ruta para propiedades algebraicas
-@app.route("/properties", methods=["GET", "POST"])
+
+#ya
+@app.route('/properties', methods=['GET', 'POST'])
 def properties():
     if request.method == "POST":
         dimension = request.form.get("dimension")
@@ -749,6 +746,8 @@ def properties():
 
     return render_template("properties.html", step=1)
 
+
+#esta va con properties
 @app.route("/compute_properties", methods=["POST"])
 def compute_properties():
     dimension = int(request.form["dimension"])
@@ -769,7 +768,7 @@ def compute_properties():
         return render_template("properties.html", step=1, error=f"Error: {str(e)}")
 
 # Ruta para combinación lineal
-@app.route("/linear_combination", methods=["GET", "POST"])
+@app.route('/linear_combination', methods=['GET', 'POST'])
 def linear_combination():
     if request.method == "POST":
         dimension = request.form.get("dimension")
@@ -826,8 +825,10 @@ def solve_linear_combination():
         error_msg = str(e) if "No tiene solución" in str(e) else "No tiene solución"
         return render_template("linear_combination.html", step=1, error=f"Error: {error_msg}")
 
+        
+#ya
 # Ruta para ecuación vectorial
-@app.route("/vector_equation", methods=["GET", "POST"])
+@app.route('/vector_equation', methods=['GET', 'POST'])
 def vector_equation():
     if request.method == "POST":
         dimension = request.form.get("dimension")
@@ -1122,6 +1123,7 @@ def matrix_add():
     if request.method == "POST":
         if use_result and 'current_matrix' in session:
             matrix_a_str = session['current_matrix']
+            #errorcito linea 1126
             matrix_a = string_to_fraction(matrix_a_str)
             rows = len(matrix_a)
             cols = len(matrix_a[0])
@@ -1139,6 +1141,7 @@ def matrix_add():
     elif use_result and 'current_matrix' in session:
         # Mostrar step=2 para ingresar matrix_b
         matrix_a_str = session['current_matrix']
+        #errorcito linea 1144
         matrix_a = string_to_fraction(matrix_a_str)
         rows = len(matrix_a)
         cols = len(matrix_a[0])
@@ -1317,7 +1320,8 @@ def matrix_multiply_solve():
     except Exception as e:
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error al realizar la multiplicación: {str(e)}")
 
-@app.route("/matrix_transpose", methods=["GET", "POST"])
+#ya
+@app.route('/matrix_transpose', methods=['GET', 'POST'])
 def matrix_transpose():
     use_result = request.args.get('use_result')
     if request.method == "POST":
@@ -1512,6 +1516,7 @@ def matrix_properties():
     return render_template("matrix_properties.html")
 
 # ========= Identidades de matrices (wizard) =========
+#ya
 @app.route("/matrix_identities", methods=["GET", "POST"])
 def matrix_identities():
     if request.method == "GET":
@@ -1661,7 +1666,8 @@ def matrix_inverse_solve():
         steps=steps, rank=rank, pivots=pivots, props=props
     )
 
-@app.route("/determinant", methods=["GET", "POST"])
+#ya
+@app.route('/determinant', methods=['GET', 'POST'])
 def determinant():
     if request.method == "POST":
         try:
@@ -1786,7 +1792,9 @@ def determinant_property5():
     # GET
     return render_template("determinant_property5.html")
 
-@app.route("/cramer", methods=["GET", "POST"])
+    
+#ya
+@app.route('/cramer', methods=['GET', 'POST'])
 def cramer():
     from models.equations_solver import solve_by_cramer
 
@@ -1890,8 +1898,8 @@ def positional_notation():
         resultado=resultado,
         base=base,
     )
-
-@app.route("/numerical_errors", methods=["GET", "POST"])
+#ya
+@app.route('/numerical_errors', methods=['GET', 'POST'])
 def numerical_errors():
     error = None
     filas = []
@@ -2090,7 +2098,6 @@ def fraction_to_string(matrix):
     return matrix
 
 def string_to_fraction(matrix_str):
-    """Convertir matriz de strings de vuelta a objetos Fraction"""
     if isinstance(matrix_str, list):
         return [string_to_fraction(row) for row in matrix_str]
     elif isinstance(matrix_str, str):
@@ -2102,6 +2109,78 @@ def string_to_fraction(matrix_str):
             except:
                 return Fraction(0)
     return matrix_str
+
+
+#aqui binarios
+
+@app.route('/')
+def index():
+    return redirect(url_for('binaries_dashboard'))
+
+@app.route('/binaries')
+def binaries_dashboard():
+    # Renderiza el dashboard principal con todos los formularios
+    hex_table = get_hex_conversion_table()
+    return render_template('binaries_dashboard.html', hex_table=hex_table)
+
+# --- Rutas de Procesamiento de Datos ---
+
+@app.route('/binaries/process_conversion', methods=['POST'])
+def process_conversion():
+    conversion_type = request.form.get('conversion_type')
+    
+    if conversion_type == 'dec_to_bin':
+        decimal = request.form.get('decimal_value')
+        bits = request.form.get('bits_dec_bin')
+        result, procedure_html, result_summary = dec_to_bin(decimal, bits)
+        title = "Decimal a Binario"
+        
+    elif conversion_type == 'hex_to_bin':
+        hex_value = request.form.get('hex_value')
+        result, procedure_html, result_summary = hex_to_bin_proc(hex_value)
+        title = "Hexadecimal a Binario"
+        
+    else:
+        # Manejar otras conversiones (si se añaden más adelante)
+        result, procedure_html, result_summary = None, "<p class='error'>Tipo de conversión no soportado.</p>", "Error"
+        title = "Error de Conversión"
+
+    return render_template('conversion_result.html', 
+                           title=title, 
+                           result=result, 
+                           procedure_html=procedure_html,
+                           result_summary=result_summary)
+
+@app.route('/binaries/process_signed', methods=['POST'])
+def process_signed():
+    decimal = request.form.get('signed_decimal')
+    bits = request.form.get('signed_bits')
+    
+    c2_result, procedure_html, result_summary = get_signed_c2(decimal, bits)
+    
+    return render_template('conversion_result.html', 
+                           title="Análisis de Números Enteros", 
+                           result=c2_result, 
+                           procedure_html=procedure_html,
+                           result_summary=result_summary)
+
+@app.route('/binaries/process_floating_point', methods=['POST'])
+def process_floating_point():
+    decimal = request.form.get('fp_decimal')
+    bits_s = request.form.get('fp_sign_bits')
+    bits_e = request.form.get('fp_exponent_bits')
+    bits_m = request.form.get('fp_mantissa_bits')
+    
+    fp_result, procedure_html, result_summary = floating_point(decimal, bits_s, bits_e, bits_m)
+    
+    # Nota: Usamos una plantilla específica para flotante si necesitamos layout diferente
+    # Por ahora, usamos la genérica, pero la llamamos con un título específico.
+    return render_template('floating_point_result.html', 
+                           title="Representación Punto Flotante (Base 2)", 
+                           result=fp_result, 
+                           procedure_html=procedure_html,
+                           result_summary=result_summary)
+#fin bin
 
 if __name__ == "__main__":
     app.run(debug=True)
