@@ -4,317 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Álgebra Lineal</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #000000 0%, #000000 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 800px;
-            width: 100%;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        h1 {
-            color: #000000;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            font-weight: 300;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #7f8c8d;
-            margin-bottom: 40px;
-            font-size: 1.1em;
-        }
-
-        .error {
-            background: #e74c3c;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #000000;
-            font-weight: 500;
-            font-size: 1.1em;
-        }
-
-        input[type="number"] {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #000000;
-            border-radius: 10px;
-            font-size: 1.1em;
-            transition: all 0.3s ease;
-            background: #ffffff;
-        }
-
-        input[type="number"]:focus {
-            outline: none;
-            border-color: #000000;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(184, 169, 217, 0.1);
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #000000, #000000);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(184, 169, 217, 0.3);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .matrix-container {
-            margin: 30px 0;
-            overflow-x: auto;
-        }
-
-        .matrix-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 10px;
-            margin: 20px 0;
-        }
-
-        .matrix-table td {
-            padding: 0;
-        }
-
-        .matrix-table input {
-            width: 80px;
-            height: 50px;
-            text-align: center;
-            border: 2px solid #000000;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            color: #000000; /* Changed matrix values color to black */
-        }
-
-        .matrix-table input:focus {
-            border-color: #000000;
-            box-shadow: 0 0 0 2px rgba(184, 169, 217, 0.1);
-        }
-
-        .matrix-table .result-column input {
-            background: #ffffff;
-            color: #000000;
-            border-color: #340acb;
-        }
-
-        .matrix-table .result-column input::placeholder {
-            color: 000000(139, 69, 19, 0.7);
-        }
-
-        .matrix-info {
-            background: #000000;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #ffffff;
-        }
-
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
-
-        .step {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #1b161857;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin: 0 10px;
-            position: relative;
-        }
-
-        .step.active {
-            background: #07060961;
-            color: white;
-        }
-
-        .step.completed {
-            background: #000000;
-            color: white;
-        }
-
-        .step::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 100%;
-            width: 20px;
-            height: 2px;
-            background: #ecf0f1;
-            transform: translateY(-50%);
-        }
-
-        .step:last-child::after {
-            display: none;
-        }
-
-        .math-symbols {
-            text-align: center;
-            margin: 20px 0;
-            font-size: 1.2em;
-            color: #7f8c8d;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Calculadora de Álgebra Lineal</h1>
-        <p class="subtitle">Resuelve sistemas de ecuaciones lineales usando el método de Gauss</p>
+        <header>
+            <h1>Calculadora de Álgebra Lineal</h1>
+            <p class="subtitle">
+                Módulo académico para sistemas de ecuaciones, matrices, métodos numéricos y análisis de errores.
+            </p>
+        </header>
 
-        {% if error %}
-            <div class="error">
-                {{ error }}
-            </div>
-        {% endif %}
+        <main>
 
-        {% if step == 1 %}
-            <div class="step-indicator">
-                <div class="step active">1</div>
-                <div class="step">2</div>
-                <div class="step">3</div>
-            </div>
-
-            <form method="POST" action="{{ url_for('linear_system') }}">
-                <div class="form-group">
-                    <label for="num_vars">Número de incógnitas:</label>
-                    <input type="number" id="num_vars" name="num_vars" min="1" max="10" required placeholder="Ej: 3">
+            <!-- SECCIÓN 1: ÁLGEBRA LINEAL -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Álgebra Lineal</h2>
+                    <span class="section-tag">Vectores · Sistemas · Interpretación</span>
                 </div>
-                
-                <div class="form-group">
-                    <label for="num_eqs">Número de ecuaciones:</label>
-                    <input type="number" id="num_eqs" name="num_eqs" min="1" max="10" required placeholder="Ej: 3">
+                <p class="section-desc">
+                    Herramientas para trabajar con sistemas de ecuaciones, combinaciones lineales e interpretaciones
+                    geométricas en ℝⁿ.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/linear_system">Resolver Sistemas de Ecuaciones</a></li>
+                    <li><a class="tool-link" href="/linear_combination">Combinación Lineal</a></li>
+                    <li><a class="tool-link" href="/vector_equation">Ecuación Vectorial</a></li>
+                    <li><a class="tool-link" href="/matvec">Multiplicación Matriz × Vector</a></li>
+                    <li><a class="tool-link" href="/matrix_equation">Ecuación Matricial (AX = B)</a></li>
+                    <li><a class="tool-link" href="/homogeneous">Sistema Homogéneo (AX = 0)</a></li>
+                    <li><a class="tool-link" href="/properties">Propiedades Algebraicas de ℝⁿ</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 2: OPERACIONES CON MATRICES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Operaciones con Matrices</h2>
+                    <span class="section-tag">Aritmética · Transpuesta · Inversa</span>
                 </div>
-                
-                <button type="submit" class="btn">Continuar</button>
-            </form>
+                <p class="section-desc">
+                    Módulos paso a paso para ver cómo se construyen las operaciones básicas y propiedades matriciales.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/matrix_operations">Operaciones Aritméticas (vista general)</a></li>
+                    <li><a class="tool-link" href="/matrix_add">Suma de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_subtract">Resta de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_scalar">Multiplicación por Escalar</a></li>
+                    <li><a class="tool-link" href="/matrix_multiply">Multiplicación Matricial</a></li>
+                    <li><a class="tool-link" href="/matrix_transpose">Transpuesta de una Matriz</a></li>
+                    <li><a class="tool-link" href="/matrix_inverse">Inversa por Gauss–Jordan</a></li>
+                    <li><a class="tool-link" href="/matrix_properties">Verificar Propiedades de Matrices</a></li>
+                    <li><a class="tool-link" href="/matrix_identities">Identidades Matriciales</a></li>
+                </ul>
+            </section>
 
-            <div class="btn-group" style="margin-top: 2rem;">
-                <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al Menú Principal</a>
-            </div>
-
-        {% elif step == 2 %}
-            <div class="step-indicator">
-                <div class="step completed">1</div>
-                <div class="step active">2</div>
-                <div class="step">3</div>
-            </div>
-
-            <div class="matrix-info">
-                <strong>Sistema de {{ num_eqs }} ecuaciones con {{ num_vars }} incógnitas</strong>
-                <div class="math-symbols">Ax = b</div>
-            </div>
-
-            <form method="POST" action="/solve">
-                <input type="hidden" name="num_vars" value="{{ num_vars }}">
-                <input type="hidden" name="num_eqs" value="{{ num_eqs }}">
-
-                <div class="matrix-container">
-                    <p style="text-align: center; margin-bottom: 15px; color: #7f8c8d;">
-                        Ingresa los coeficientes de la matriz aumentada:
-                    </p>
-                    
-                    <table class="matrix-table">
-                        {% for i in range(num_eqs) %}
-                            <tr>
-                                {% for j in range(num_vars) %}
-                                    <td>
-                                        <input type="number" 
-                                               step="any" 
-                                               name="cell_{{ i }}_{{ j }}" 
-                                               placeholder="a{{ i+1 }}{{ j+1 }}" 
-                                               required>
-                                    </td>
-                                {% endfor %}
-                                <td style="text-align: center; color: #7f8c8d; font-size: 1.5em; padding: 0 10px;">|</td>
-                                <td class="result-column">
-                                    <input type="number" 
-                                           step="any" 
-                                           name="cell_{{ i }}_{{ num_vars }}" 
-                                           placeholder="b{{ i+1 }}" 
-                                           required>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
+            <!-- SECCIÓN 3: DETERMINANTES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Determinantes</h2>
+                    <span class="section-tag">Det(A) · Propiedades · Cramer</span>
                 </div>
-                
-                <button type="submit" class="btn">Resolver Sistema</button>
-            </form>
-        {% endif %}
+                <p class="section-desc">
+                    Cálculo detallado del determinante, propiedades importantes y aplicación al método de Cramer.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/determinant">Calcular Determinante (con pasos)</a></li>
+                    <li><a class="tool-link" href="/determinant/property5">Propiedad 5: det(A·B) = det(A)·det(B)</a></li>
+                    <li><a class="tool-link" href="/cramer">Método de Cramer</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 4: REPRESENTACIÓN NUMÉRICA -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Representación Numérica</h2>
+                    <span class="section-tag">Bases · Notación Posicional</span>
+                </div>
+                <p class="section-desc">
+                    Análisis de cómo se representan los números en distintas bases y su descomposición posicional.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/positional_notation">Notación Posicional (Base 10 y Base 2)</a></li>
+                </ul>
+            </section>
+
+            <!-- SECCIÓN 5: BINARIOS -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Binarios</h2>
+                    <span class="section-tag">Sistemas Numéricos</span>
+                </div>
+                <p class="section-desc">
+                    Conversiones entre decimal, binario y hexadecimal.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/binaries">Binarios</a></li>
+                </ul>
+            </section>
+
+
+            <!-- SECCIÓN 6: MÉTODOS NUMÉRICOS Y ERRORES -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Métodos Numéricos y Errores</h2>
+                    <span class="section-tag">Truncamiento · Redondeo · Punto flotante</span>
+                </div>
+                <p class="section-desc">
+                    Módulos dedicados a errores numéricos, acumulación de error y representación en punto flotante con NumPy.
+                </p>
+                <ul class="tool-grid">
+                    <li><a class="tool-link" href="/numerical_errors">Errores numéricos + Tabla de truncamiento</a></li>
+                    <li><a class="tool-link" href="/floating_point">Errores en punto flotante (0.1 + 0.2 == 0.3)</a></li>
+                    <li><a class="tool-link" href="/numpy_workshop">Taller NumPy: pérdidas de precisión</a></li>
+                    <li><a class="tool-link" href="/error_analysis">Errores: absoluto, relativo y propagación</a></li>
+                </ul>
+            </section>
+
+        </main>
+
+        <footer>
+            Desarrollado por Pelones 👨🏻‍🦲 – Calculadora de Álgebra Lineal © 2025
+        </footer>
     </div>
 </body>
 </html>

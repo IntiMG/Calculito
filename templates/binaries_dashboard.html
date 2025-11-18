@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Binaria y de Representación</title>
+    <!-- Asumiendo que 'styles.css' está en la carpeta 'static' -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Reutilizando estilos de header si no se desea usar el h1/subtitle específico del CSS provisto -->
+        <h1>Calculadora de Bases y Representación Numérica</h1>
+        <p class="subtitle">
+            Análisis de conversiones (Binario, Hexadecimal), enteros (C2, Signed) y punto flotante (IEEE-754 conceptual).
+        </p>
+
+        <main>
+            <!-- Tabla de Referencia -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Tabla de Conversión Numérica</h2>
+                    <span class="section-tag">Referencia</span>
+                </div>
+                <p class="section-desc">
+                    Esta tabla muestra la representación de los valores del 0 al 15 en los sistemas Decimal, Binario y Hexadecimal.
+                </p>
+                <div class="solution-box">
+                    {{ hex_table | safe }}
+                </div>
+            </section>
+
+
+            <!-- SECCIÓN 1: Conversiones Simples (Dec <-> Bin <-> Hex) -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Conversiones de Base (Dec / Bin / Hex)</h2>
+                    <span class="section-tag">Paso a Paso</span>
+                </div>
+                <p class="section-desc">
+                    Convierte un número entre Decimal y Hexadecimal a Binario, mostrando el procedimiento detallado.
+                </p>
+                <form action="{{ url_for('process_conversion') }}" method="post" class="conversion-form">
+                    
+                    <h3>Decimal a Binario</h3>
+                    <input type="hidden" name="conversion_type" value="dec_to_bin">
+                    <div class="form-group">
+                        <label for="decimal_value">Valor Decimal Entero:</label>
+                        <input type="number" id="decimal_value" name="decimal_value" required value="42">
+                    </div>
+                    <div class="form-group">
+                        <label for="bits_dec_bin">Cantidad de Bits (Padding):</label>
+                        <input type="number" id="bits_dec_bin" name="bits_dec_bin" min="1" required value="8">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn">Calcular Dec &rarr; Bin</button>
+                    </div>
+                </form>
+
+                <hr style="margin: 30px 0; border-color: #e0d5f5;">
+
+                <form action="{{ url_for('process_conversion') }}" method="post" class="conversion-form">
+                    <h3>Hexadecimal a Binario</h3>
+                    <input type="hidden" name="conversion_type" value="hex_to_bin">
+                    <div class="form-group">
+                        <label for="hex_value">Valor Hexadecimal:</label>
+                        <input type="text" id="hex_value" name="hex_value" required value="2A">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn">Calcular Hex &rarr; Bin</button>
+                    </div>
+                </form>
+
+            </section>
+
+            <!-- SECCIÓN 2: Números Enteros (Signed/Unsigned/C2) -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Representación de Números Enteros</h2>
+                    <span class="section-tag">Complemento a 2</span>
+                </div>
+                <p class="section-desc">
+                    Calcula y analiza el número en formato Sin Signo (Unsigned), Signo/Magnitud y Complemento a 2 (C2), especificando rangos min/max.
+                </p>
+                <form action="{{ url_for('process_signed') }}" method="post">
+                    <div class="form-group">
+                        <label for="signed_decimal">Valor Decimal Entero (Positivo o Negativo):</label>
+                        <input type="number" id="signed_decimal" name="signed_decimal" required value="-42">
+                    </div>
+                    <div class="form-group">
+                        <label for="signed_bits">Cantidad de Bits:</label>
+                        <input type="number" id="signed_bits" name="signed_bits" min="2" required value="8">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn">Analizar Signed / C2</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- SECCIÓN 3: Punto Flotante (Floating Point) -->
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Punto Flotante (Floating Point)</h2>
+                    <span class="section-tag">IEEE-754 Conceptual</span>
+                </div>
+                <p class="section-desc">
+                    Representa un número decimal en binario de punto flotante (Base 2), mostrando los pasos de normalización, sesgo del exponente y ensamblaje.
+                </p>
+                <form action="{{ url_for('process_floating_point') }}" method="post">
+                    <div class="form-group">
+                        <label for="fp_decimal">Valor Decimal Flotante (Ej: 2.75):</label>
+                        <input type="number" step="any" id="fp_decimal" name="fp_decimal" required value="2.75">
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="form-group">
+                            <label for="fp_sign_bits">Bits de Signo:</label>
+                            <input type="number" id="fp_sign_bits" name="fp_sign_bits" min="1" max="1" required value="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="fp_exponent_bits">Bits de Exponente (E):</label>
+                            <input type="number" id="fp_exponent_bits" name="fp_exponent_bits" min="3" required value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="fp_mantissa_bits">Bits de Mantisa (M):</label>
+                            <input type="number" id="fp_mantissa_bits" name="fp_mantissa_bits" min="3" required value="6">
+                        </div>
+                    </div>
+                    <p class="section-desc" style="font-size: 0.85em; margin-top: -10px; color: #7a3fa3;">
+                        Ejemplo de 16-bits: S=1, E=5, M=10 (Total 16 bits).
+                    </p>
+                    <div class="btn-group">
+                        <button type="submit" class="btn">Calcular Punto Flotante</button>
+                    </div>
+                </form>
+            </section>
+            
+        </main>
+
+        <footer>
+            Desarrollado por Pelones 👨🏻‍🦲 – Calculadora de Álgebra Lineal © 2025
+        </footer>
+    </div>
+</body>
+</html>
