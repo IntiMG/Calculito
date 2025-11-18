@@ -1,0 +1,155 @@
+<!-- esta listo falta comprobar errores -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ecuaciones - Calculadora de Álgebra Lineal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Álgebra Lineal</h1>
+        <p class="subtitle">Resuelve sistemas de ecuaciones lineales usando el método de Gauss</p>
+
+        {% if error %}
+            <div class="error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if step == 1 %}
+            <div class="step-indicator">
+                <div class="step active">1</div>
+                <div class="step">2</div>
+                <div class="step">3</div>
+            </div>
+
+            <form method="POST" action="{{ url_for('linear_system') }}">
+                <div class="form-group">
+                    <label for="num_vars">Número de incógnitas:</label>
+                    <input type="number" id="num_vars" name="num_vars" min="1" max="10" required placeholder="Ej: 3">
+                </div>
+                
+                <div class="form-group">
+                    <label for="num_eqs">Número de ecuaciones:</label>
+                    <input type="number" id="num_eqs" name="num_eqs" min="1" max="10" required placeholder="Ej: 3">
+                </div>
+                
+                <button type="submit" class="btn">Continuar</button>
+            </form>
+
+            <div class="btn-group" style="margin-top: 2rem;">
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al Menú Principal</a>
+            </div>
+
+        {% elif step == 2 %}
+            <div class="step-indicator">
+                <div class="step completed">1</div>
+                <div class="step active">2</div>
+                <div class="step">3</div>
+            </div>
+
+            <div class="matrix-info">
+                <strong>Sistema de {{ num_eqs }} ecuaciones con {{ num_vars }} incógnitas</strong>
+                <div class="math-symbols">Ax = b</div>
+            </div>
+
+            <form method="POST" action="{{ url_for('solve_linear_system') }}">
+                <input type="hidden" name="num_vars" value="{{ num_vars }}">
+                <input type="hidden" name="num_eqs" value="{{ num_eqs }}">
+
+                <div class="matrix-container">
+                    <p style="text-align: center; margin-bottom: 15px; color: #7f8c8d;">
+                        Ingresa los coeficientes de la matriz aumentada:
+                    </p>
+                    
+                    <table class="matrix-table">
+                        {% for i in range(num_eqs) %}
+                            <tr>
+                                {% for j in range(num_vars) %}
+                                    <td>
+                                        <input type="number" 
+                                               step="any" 
+                                               name="cell_{{ i }}_{{ j }}" 
+                                               placeholder="a{{ i+1 }}{{ j+1 }}" 
+                                               required>
+                                    </td>
+                                {% endfor %}
+                                <td style="text-align: center; color: #7f8c8d; font-size: 1.5em; padding: 0 10px;">|</td>
+                                <td class="result-column">
+                                    <input type="number" 
+                                           step="any" 
+                                           name="cell_{{ i }}_{{ num_vars }}" 
+                                           placeholder="b{{ i+1 }}" 
+                                           required>
+                                    </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                
+                <button type="submit" class="btn">Resolver Sistema</button>
+            </form>
+
+        {% elif step == 3 %}
+            <div class="step-indicator">
+                <div class="step completed">1</div>
+                <div class="step completed">2</div>
+                <div class="step active">3</div>
+            </div>
+
+            <div class="solution-container">
+                <h2>Solución del Sistema</h2>
+                <div class="solution-box">
+                    {% if solution %}
+                        <table class="solution-table">
+                            <tr>
+                                <th>Variable</th>
+                                <th>Valor</th>
+                            </tr>
+                            {% for i, val in enumerate(solution) %}
+                                <tr>
+                                    <td>x{{ i+1 }}</td>
+                                    <td>{{ "%.6f"|format(val) }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <p>No se pudo obtener solución.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top: 2rem;">
+                <a href="{{ url_for('linear_system') }}" class="btn">Resolver otro sistema</a>
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al Menú Principal</a>
+            </div>
+        {% else %}
+            <div class="step-indicator">
+                <div class="step active">1</div>
+                <div class="step">2</div>
+                <div class="step">3</div>
+            </div>
+
+            <form method="POST" action="{{ url_for('linear_system') }}">
+                <div class="form-group">
+                    <label for="num_vars">Número de incógnitas:</label>
+                    <input type="number" id="num_vars" name="num_vars" min="1" max="10" required placeholder="Ej: 3">
+                </div>
+                
+                <div class="form-group">
+                    <label for="num_eqs">Número de ecuaciones:</label>
+                    <input type="number" id="num_eqs" name="num_eqs" min="1" max="10" required placeholder="Ej: 3">
+                </div>
+                
+                <button type="submit" class="btn">Continuar</button>
+            </form>
+
+            <div class="btn-group" style="margin-top: 2rem;">
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">Volver al Menú Principal</a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

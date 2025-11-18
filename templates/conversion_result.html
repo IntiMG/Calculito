@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Resultado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ title }}</h1>
+        <p class="subtitle">{{ result_summary | safe }}</p>
+
+        <main>
+            <section class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">Procedimiento Detallado</h2>
+                    <span class="section-tag">Paso a Paso</span>
+                </div>
+
+                <div class="solution-container">
+                    {{ procedure_html | safe }}
+                </div>
+                
+                <div class="btn-group" style="margin-top: 30px;">
+                    <a href="{{ url_for('binaries_dashboard') }}" class="btn-secondary">← Volver al Dashboard Binario</a>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            Desarrollado por Pelones 👨🏻‍🦲 – Calculadora de Álgebra Lineal © 2025
+        </footer>
+    </div>
+</body>
+</html>
