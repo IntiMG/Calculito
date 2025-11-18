@@ -1,1 +1,8 @@
+<<<<<<< HEAD
+Flask
+numpy
+scipy
+sympy
+=======
 Flask==3.0.0
+>>>>>>> 50477990be3153c1a50ac6c4f3f2ce9a6c9a2f70
