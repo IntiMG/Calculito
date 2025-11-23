@@ -1,11 +1,6 @@
 # models/error_analysis.py
 import math
-<<<<<<< HEAD
-#aqui da error esto
-#from sympy import symbols, sympify, diff
-=======
 from sympy import symbols, sympify, diff
->>>>>>> 50477990be3153c1a50ac6c4f3f2ce9a6c9a2f70
 
 class ErrorAnalysis:
 
