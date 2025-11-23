@@ -427,3 +427,33 @@ footer {
         width: 100%;
     }
 }
+
+
+/* Estilos para la tabla de referencia de binarios */
+
+.hex-vertical-table {
+    border-collapse: collapse; /* Asegura que los bordes de las celdas se unan */
+    border: none; /* Asegura que la tabla no tenga un borde exterior */
+}
+
+.hex-vertical-table th, 
+.hex-vertical-table td {
+    /* 1. ANULAR bordes horizontales (arriba y abajo) */
+    border-top: none !important; 
+    border-bottom: none !important;
+    
+    /* 2. APLICAR bordes verticales (izquierda y derecha) */
+    border-left: 1px solid #ccc !important; 
+    border-right: 1px solid #ccc !important;
+    
+    /* 3. Ajuste visual */
+    padding: 8px; 
+    text-align: center;
+}
+
+/* Opcional: Para asegurar que el borde izquierdo y derecho de toda la tabla sea visible */
+.hex-vertical-table tr:first-child th:first-child,
+.hex-vertical-table tr:first-child th:last-child {
+    border-left: 1px solid #ccc !important;
+    border-right: 1px solid #ccc !important;
+}
