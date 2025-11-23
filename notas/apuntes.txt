@@ -1,0 +1,16 @@
+Conversiones Disponibles
+Decimal a binario , entero , numero de bits
+Hexadecimal a binario 
+Representación de Números Enteros
+Complemento a 2
+Calcula y analiza el número en formato Sin Signo (Unsigned), Signo/Magnitud y Complemento a 2 (C2), especificando rangos min/max.
+pUNTO FLOTANTE ERROR
+FALTA: Decimal
+
+#notacion cientifica y tmb n decimales, paso a paso y mostrar la formula
+#funciones exponenciales y logaritmicas y trigonometricas polinomiales4
+#propagacion de errores derivando. integrales
+#graficas 
+#log comun
+
+#NOTA: paso a paso para todos los errores

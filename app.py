@@ -2129,27 +2129,39 @@ def binaries_dashboard():
 def process_conversion():
     conversion_type = request.form.get('conversion_type')
     
+    # INICIO: CORRECCIÓN DE NAMERROR (Inicialización de variables)
+    result = None
+    procedure_html = ""
+    result_summary = "Error de procesamiento."
+    title = "Error"
+    # FIN: CORRECCIÓN DE NAMERROR
+    
     if conversion_type == 'dec_to_bin':
         decimal = request.form.get('decimal_value')
         bits = request.form.get('bits_dec_bin')
+        
+        # Asumiendo que dec_to_bin devuelve 3 valores:
         result, procedure_html, result_summary = dec_to_bin(decimal, bits)
         title = "Decimal a Binario"
         
     elif conversion_type == 'hex_to_bin':
         hex_value = request.form.get('hex_value')
+        
+        # Asumiendo que hex_to_bin_proc devuelve 3 valores:
         result, procedure_html, result_summary = hex_to_bin_proc(hex_value)
         title = "Hexadecimal a Binario"
         
     else:
         # Manejar otras conversiones (si se añaden más adelante)
-        result, procedure_html, result_summary = None, "<p class='error'>Tipo de conversión no soportado.</p>", "Error"
+        procedure_html = "<p class='error'>Tipo de conversión no soportado.</p>"
+        result_summary = "Error: Tipo no soportado"
         title = "Error de Conversión"
 
     return render_template('conversion_result.html', 
-                           title=title, 
-                           result=result, 
-                           procedure_html=procedure_html,
-                           result_summary=result_summary)
+                            title=title, 
+                            result=result, 
+                            procedure_html=procedure_html,
+                            result_summary=result_summary)
 
 @app.route('/binaries/process_signed', methods=['POST'])
 def process_signed():
