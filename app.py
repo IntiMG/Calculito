@@ -15,6 +15,7 @@ from models.numerical_errors import NumericalErrors
 from models.floating_point_demo import FloatingPointDemo
 from models.numpy_workshop import NumpyWorkshop
 from models.error_analysis import ErrorAnalysis
+from models.root_finding import RootFinding, parse_function
 from copy import deepcopy
 from types import SimpleNamespace
 
@@ -2086,6 +2087,79 @@ def error_analysis():
         func_str=func_str,
         x_val=x_val,
         dx_val=dx_val,
+    )
+
+
+@app.route("/root_finding", methods=["GET", "POST"])
+def root_finding():
+    error = None
+    iterations = []
+    result = None
+
+    method = "biseccion"
+    func_input = "x**3 + 4*x**2 - 10"
+    a_str = "1"
+    b_str = "2"
+    tol_str = "0.0001"
+    method_label = "Método de Bisección"
+    xr_label = "xm (punto medio)"
+
+    if request.method == "POST":
+        method = request.form.get("method", "biseccion")
+        func_input = request.form.get("func", func_input).strip()
+        a_str = request.form.get("a", a_str).strip()
+        b_str = request.form.get("b", b_str).strip()
+        tol_str = request.form.get("error_tol", tol_str).strip()
+
+        try:
+            a = float(a_str)
+            b = float(b_str)
+            error_tol = float(tol_str)
+            if error_tol <= 0:
+                raise ValueError("El error deseado debe ser un número positivo.")
+
+            func = parse_function(func_input)
+
+            if method == "falsa_posicion":
+                iterations = RootFinding.falsa_posicion(func, a, b, error_tol)
+                method_label = "Regla Falsa (Falsa Posición)"
+                xr_label = "xr (regla falsa)"
+            else:
+                iterations = RootFinding.biseccion(func, a, b, error_tol)
+                method = "biseccion"
+                method_label = "Método de Bisección"
+                xr_label = "xm (punto medio)"
+
+            if iterations:
+                last = iterations[-1]
+                result = {
+                    "raiz": last.xr,
+                    "iteraciones": len(iterations),
+                    "intervalo": (last.a, last.b),
+                    "error_final": last.error_rel_pct,
+                    "method_label": method_label,
+                    "xr_label": xr_label,
+                }
+        except Exception as e:
+            error = str(e)
+            iterations = []
+            result = None
+    else:
+        method_label = "Método de Bisección"
+        xr_label = "xm (punto medio)"
+
+    return render_template(
+        "root_finding.html",
+        error=error,
+        method=method,
+        method_label=method_label,
+        func_input=func_input,
+        a_str=a_str,
+        b_str=b_str,
+        tol_str=tol_str,
+        iterations=iterations,
+        result=result,
+        xr_label=xr_label,
     )
 
 
