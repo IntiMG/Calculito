@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métodos de Bisección y Regla Falsa</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f6f7fb;
+            margin: 0;
+            padding: 20px;
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 24px 28px;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 6px;
+        }
+        p.lead {
+            margin-top: 0;
+            color: #7f8c8d;
+        }
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px 18px;
+            margin: 20px 0 10px;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            color: #2c3e50;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dce1e6;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .full-row {
+            grid-column: 1 / -1;
+        }
+        button {
+            padding: 12px 18px;
+            border: none;
+            background: #000000;
+            color: white;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px rgba(0,0,0,0.15);
+        }
+        .alert {
+            padding: 12px 14px;
+            background: #fdecea;
+            color: #c0392b;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            margin: 10px 0 5px;
+        }
+        .card {
+            background: #f7f9fb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid #e3e8ee;
+            margin-bottom: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #e5e8ed;
+            padding: 8px 10px;
+            text-align: center;
+        }
+        th {
+            background: #f1f3f6;
+            font-weight: 700;
+        }
+        .steps-list {
+            list-style: decimal;
+            padding-left: 18px;
+            color: #34495e;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 12px;
+            text-decoration: none;
+            color: #000000;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Métodos de Búsqueda de Raíces</h1>
+        <p class="lead">Integra los métodos de <strong>Bisección</strong> y <strong>Regla Falsa</strong> con cada iteración en tabla y una explicación paso a paso.</p>
+
+        <div class="card">
+            <form method="POST">
+                <div class="full-row">
+                    <label for="func">Función f(x)</label>
+                    <input type="text" id="func" name="func" value="{{ func_input }}" placeholder="Ejemplo: x**3 + 4*x**2 - 10 o lambda x: ..." required>
+                    <small>Usa <code>x</code> y funciones de <code>math</code> (sin eval directo). Ejemplo: <code>sin(x) + x**2</code>.</small>
+                </div>
+                <div>
+                    <label for="a">Límite inferior (a)</label>
+                    <input type="text" id="a" name="a" value="{{ a_str }}" required>
+                </div>
+                <div>
+                    <label for="b">Límite superior (b)</label>
+                    <input type="text" id="b" name="b" value="{{ b_str }}" required>
+                </div>
+                <div>
+                    <label for="error_tol">Error deseado (ε)</label>
+                    <input type="text" id="error_tol" name="error_tol" value="{{ tol_str }}" required>
+                </div>
+                <div>
+                    <label for="method">Método</label>
+                    <select id="method" name="method">
+                        <option value="biseccion" {% if method == 'biseccion' %}selected{% endif %}>Bisección</option>
+                        <option value="falsa_posicion" {% if method == 'falsa_posicion' %}selected{% endif %}>Regla Falsa (Falsa Posición)</option>
+                    </select>
+                </div>
+                <div class="full-row">
+                    <button type="submit">Calcular</button>
+                </div>
+            </form>
+            {% if error %}
+                <div class="alert">{{ error }}</div>
+            {% endif %}
+        </div>
+
+        {% if result %}
+            <div class="card">
+                <h3>Resultado: {{ result.method_label }}</h3>
+                <p><strong>Raíz aproximada:</strong> {{ result.raiz|fmt_num }}</p>
+                <p><strong>Iteraciones:</strong> {{ result.iteraciones }}</p>
+                <p><strong>Intervalo actual:</strong> [{{ result.intervalo[0]|fmt_num }}, {{ result.intervalo[1]|fmt_num }}]</p>
+                {% if result.error_final is not none %}
+                    <p><strong>Error relativo final:</strong> {{ '%.6f' % result.error_final }} %</p>
+                {% else %}
+                    <p><strong>Error relativo final:</strong> —</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if iterations %}
+            <div class="card">
+                <h3>Tabla de iteraciones ({{ method_label }})</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>a</th>
+                            <th>b</th>
+                            <th>f(a)</th>
+                            <th>f(b)</th>
+                            <th>{{ xr_label }}</th>
+                            <th>f({{ xr_label.split(' ')[0] }})</th>
+                            <th>Error relativo (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for it in iterations %}
+                        <tr>
+                            <td>{{ it.iteracion }}</td>
+                            <td>{{ it.a|fmt_num }}</td>
+                            <td>{{ it.b|fmt_num }}</td>
+                            <td>{{ it.fa|fmt_num }}</td>
+                            <td>{{ it.fb|fmt_num }}</td>
+                            <td>{{ it.xr|fmt_num }}</td>
+                            <td>{{ it.fxr|fmt_num }}</td>
+                            <td>
+                                {% if it.error_rel_pct is none %}
+                                    —
+                                {% else %}
+                                    {{ '%.6f' % it.error_rel_pct }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <h4>Explicación paso a paso</h4>
+                <ol class="steps-list">
+                    {% for it in iterations %}
+                        <li>Iteración {{ it.iteracion }}: {{ it.accion }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        {% endif %}
+
+        <a class="back-link" href="/">⟵ Volver al inicio</a>
+    </div>
+</body>
+</html>
