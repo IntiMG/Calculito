@@ -1,0 +1,246 @@
+<!-- templates/raices_secante.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Método de la Secante - Calculito</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 1100px;
+            margin: 30px auto;
+            background: #f8f9fa;
+            padding: 20px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+        h1 {
+            text-align: center;
+            color: #e67e22;
+            margin-bottom: 10px;
+        }
+        .back-link {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link a:hover { text-decoration: underline; }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            max-width: 650px;
+            padding: 14px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .func-buttons {
+            margin: 15px 0;
+            text-align: center;
+        }
+        .btn-fun {
+            background: #d35400;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            margin: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-fun:hover { background: #c0392b; }
+
+        .param-group {
+            display: inline-block;
+            margin: 15px;
+            text-align: left;
+            min-width: 180px;
+        }
+        .param-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .submit-btn {
+            background: #e67e22;
+            color: white;
+            font-size: 18px;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 400px;
+            margin: 30px auto;
+            display: block;
+        }
+        .submit-btn:hover { background: #d35400; }
+
+        .resultado {
+            margin-top: 40px;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 8px solid;
+        }
+        .success { background: #fef9e7; border-left-color: #f39c12; }
+        .danger { background: #f8d7da; border-left-color: #dc3545; }
+
+        .verificacion-ok { color: #27ae60; font-weight: bold; font-size: 1.3em; }
+        .verificacion-mal { color: #e74c3c; font-weight: bold; font-size: 1.3em; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 15px;
+            background: white;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background: #e67e22;
+            color: white;
+        }
+
+        .grafica {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .grafica img {
+            max-width: 100%;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Método de la Secante</h1>
+    <div class="back-link">
+        <a href="{{ url_for('home') }}">← Volver al menú principal</a>
+    </div>
+
+    <form method="POST">
+        <p style="text-align:center; font-size:18px;"><strong>f(x) =</strong></p>
+        <input type="text" name="funcion" id="funcion" required 
+               value="{{ request.form.funcion or 'x**3 - x - 2' }}"
+               placeholder="Ej: x**3 - 2*x - 5">
+
+        <div class="func-buttons">
+            <button type="button" class="btn-fun" onclick="add('sin(')">sin(</button>
+            <button type="button" class="btn-fun" onclick="add('cos(')">cos(</button>
+            <button type="button" class="btn-fun" onclick="add('tan(')">tan(</button>
+            <button type="button" class="btn-fun" onclick="add('ln(')">ln(</button>
+            <button type="button" class="btn-fun" onclick="add('exp(')">exp(</button>
+            <button type="button" class="btn-fun" onclick="add('sqrt(')">√(</button>
+            <button type="button" class="btn-fun" onclick="add('**')">^</button>
+            <button type="button" class="btn-fun" onclick="add('pi')">π</button>
+            <button type="button" class="btn-fun" onclick="add('E')">e</button>
+        </div>
+
+        <div style="text-align:center;">
+            <div class="param-group">
+                <label>Punto inicial x₀</label>
+                <input type="number" step="any" name="x0" value="0" required>
+            </div>
+            <div class="param-group">
+                <label>Punto inicial x₁</label>
+                <input type="number" step="any" name="x1" value="1" required>
+            </div>
+            <div class="param-group">
+                <label>Tolerancia</label>
+                <input type="number" step="any" name="tol" value="1e-10">
+            </div>
+            <div class="param-group">
+                <label>Máx. iteraciones</label>
+                <input type="number" name="max_iter" value="50">
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Calcular Raíz con Secante</button>
+    </form>
+
+    {% if resultado %}
+        <div class="resultado {{ 'success' if resultado.get('raiz') else 'danger' }}">
+            {% if resultado.get('raiz') %}
+                <h2>Raíz encontrada: x ≈ {{ "%.12f" % resultado.raiz }}</h2>
+                <p><strong>f(raíz) = {{ "%.3e" % resultado.f_raiz }}</strong></p>
+                
+                {% if resultado.convergio %}
+                    <p class="verificacion-ok">
+                        Verificación correcta: f(raíz) ≈ 0
+                    </p>
+                {% else %}
+                    <p class="verificacion-mal">
+                        ADVERTENCIA: f(raíz) NO es cero → posible convergencia falsa
+                    </p>
+                {% endif %}
+                
+                <p>Convergió en <strong>{{ resultado.iteraciones }}</strong> iteraciones</p>
+            {% else %}
+                <h2>Error: {{ resultado.mensaje or resultado.error }}</h2>
+            {% endif %}
+
+            {% if resultado.historia %}
+                <h3>Tabla de iteraciones</h3>
+                <table>
+                    <tr>
+                        <th>n</th>
+                        <th>xₙ₋₁</th>
+                        <th>xₙ</th>
+                        <th>f(xₙ)</th>
+                        <th>xₙ₊₁</th>
+                        <th>Error absoluto</th>
+                    </tr>
+                    {% for fila in resultado.historia %}
+                    <tr>
+                        <td>{{ fila.n }}</td>
+                        <td>{{ "%.10f" % fila["x_{n-1}"] }}</td>
+                        <td>{{ "%.10f" % fila["x_n"] }}</td>
+                        <td>{{ "%.3e" % fila["f(x_n)"] }}</td>
+                        <td>{{ "%.10f" % fila["x_{n+1}"] }}</td>
+                        <td>{{ "%.3e" % (fila.error if fila.error is not none else 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+
+        {% if grafica %}
+        <div class="grafica">
+            <h3>Gráfica de f(x) con la raíz encontrada</h3>
+            <img src="{{ grafica }}" alt="Gráfica">
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<script>
+function add(texto) {
+    const input = document.getElementById('funcion');
+    input.focus();
+    input.value += texto;
+}
+</script>
+</body>
+</html>
