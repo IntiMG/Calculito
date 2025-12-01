@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models.binary_operations import dec_to_bin, get_hex_conversion_table, hex_to_bin_proc, get_signed_c2, floating_point
 import numpy as np
+from models.derivatives import procesar_funcion
 #from scipy import linalg
 from flask import Flask, render_template, request, url_for, session, redirect
 from models.equations_solver import Gauss
 from models.properties import Properties
+from sympy import sympify, lambdify, symbols
 from models.matrix_equation import MatrixEquation
 from models.arithmetic_operations import ArOperations
 from models.determinant import calculate_determinant  # <-- CORRECTO
@@ -18,6 +20,8 @@ from models.error_analysis import ErrorAnalysis
 from models.root_finding import RootFinding, parse_function
 from copy import deepcopy
 from types import SimpleNamespace
+from models.newton_raphson import newton_raphson
+from models.secant import secante
 
 app = Flask(__name__)
 #cod anterior
@@ -2266,7 +2270,90 @@ def process_floating_point():
                            result=fp_result, 
                            procedure_html=procedure_html,
                            result_summary=result_summary)
-#fin bin
+
+@app.route('/derivadas', methods=['GET', 'POST'])
+def derivadas():
+    resultado = None
+    error = None
+    funcion_str = ''
+
+    if request.method == 'POST':
+        funcion_str = request.form.get('funcion', '').strip()
+        try:
+            resultado = procesar_funcion(funcion_str)
+
+            # Evaluación de ejemplo en x=2
+            f_num_val = resultado
+            df_num_val = resultado
+
+            # Guardamos los valores para la plantilla
+            resultado.update({
+                'f_num_val': f_num_val,
+                'df_num_val': df_num_val
+            })
+        except Exception as e:
+            error = f"Función inválida: {e}"
+
+    return render_template('derivates.html',
+                           resultado=resultado,
+                           error=error,
+                           funcion_str=funcion_str)
+
+
+
+@app.route('/newton', methods=['GET', 'POST'])
+def newton():
+    resultado = None
+    grafica = None
+    funcion_str = request.form.get('funcion', 'x**3 - x - 2')
+
+    if request.method == 'POST':
+        funcion_str = request.form.get('funcion', '').strip()
+        try:
+            x0 = float(request.form.get('x0', 1.5))
+            tol = float(request.form.get('tol', 1e-10))
+            max_iter = int(request.form.get('max_iter', 50))
+
+            # Ejecutar el método de Newton-Raphson
+            resultado, grafica = newton_raphson(funcion_str, x0, tol, max_iter)
+
+        except Exception as e:
+            resultado = {'raiz': None, 'mensaje': f'Error al calcular: {e}'}
+
+    return render_template('root_newton.html', 
+                           resultado=resultado,
+                           grafica=grafica,
+                           funcion_str=funcion_str)
+
+x = symbols('x')
+
+@app.route('/secante', methods=['GET', 'POST'])
+def secante_route():
+    resultado = None
+    funcion_str = request.form.get('funcion', 'x**3 - x - 2')
+    
+    if request.method == 'POST':
+        funcion_str = request.form.get('funcion', '').strip()
+        try:
+            x0 = float(request.form.get('x0', 1.0))
+            x1 = float(request.form.get('x1', 2.0))
+            tol = float(request.form.get('tol', 1e-8))
+            max_iter = int(request.form.get('max_iter', 50))
+            
+            # Convertir la función a evaluable
+            f_sym = sympify(funcion_str)
+            f_num = lambdify(x, f_sym, modules=['numpy', 'math'])
+            
+            # Ejecutar método de la Secante
+            resultado = secante(f_num, x0, x1, tol, max_iter)
+            
+        except Exception as e:
+            resultado = {'raiz': None, 'mensaje': f'Error al calcular: {e}'}
+
+    return render_template('root_secant.html',
+                           resultado=resultado,
+                           funcion_str=funcion_str)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
