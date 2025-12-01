@@ -380,3 +380,134 @@ body {
 .vector-grid.cols-8  { grid-template-columns: repeat(8,  minmax(180px,1fr)); }
 .vector-grid.cols-9  { grid-template-columns: repeat(9,  minmax(180px,1fr)); }
 .vector-grid.cols-10 { grid-template-columns: repeat(10, minmax(180px,1fr)); }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #000000 0%, #000000 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    padding: 35px 40px 30px;
+    max-width: 1100px;
+    width: 100%;
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+header {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+h1 {
+    color: #000000;
+    margin-bottom: 8px;
+    font-size: 2.4em;
+    font-weight: 600;
+}
+
+.subtitle {
+    color: #7f8c8d;
+    font-size: 1em;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 10px;
+}
+
+.section-card {
+    background: #f7f8fb;
+    border-radius: 16px;
+    padding: 18px 20px 16px;
+    border-left: 4px solid #000000;
+}
+
+.section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.section-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #000000;
+}
+
+.section-tag {
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #7f8c8d;
+}
+
+.section-desc {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-bottom: 12px;
+}
+
+.tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px;
+    list-style: none;
+}
+
+.tool-link {
+    background: linear-gradient(135deg, #000000, #000000);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.95em;
+    font-weight: 500;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.tool-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+}
+
+footer {
+    margin-top: 18px;
+    text-align: center;
+    font-size: 0.8em;
+    color: #95a5a6;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 25px 18px 22px;
+    }
+    h1 {
+        font-size: 1.9em;
+    }
+}
