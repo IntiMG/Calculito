@@ -19,7 +19,7 @@
         
 
         <!-- Campo función solo lectura -->
-        <input type="text" name="funcion" id="funcion" readonly
+        <input type="text" name="funcion" id="funcion" readonly form="newton-form"
                value="{{ request.form.funcion or '' }}"
                placeholder="Haz clic en los botones para construir la función">
 
@@ -61,7 +61,7 @@
             <button type="button" class="btn-clear" onclick="backspace()">←</button>
         </div>
 
-        <form method="POST">
+        <form id="newton-form" method="POST">
             <div class="params">
                 <div class="param-group">
                     <label>Valor inicial x₀</label>
