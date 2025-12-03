@@ -137,35 +137,60 @@
 <div class="container">
     <h1>Método de la Secante</h1>
     <div class="back-link">
-        <a href="{{ url_for('home') }}">← Volver al menú principal</a>
+        <a href="{{ url_for('home') }}">Volver al menú principal</a>
     </div>
 
     <form method="POST">
-        <p style="text-align:center; font-size:18px;"><strong>f(x) =</strong></p>
-        <input type="text" name="funcion" id="funcion" required 
-               value="{{ request.form.funcion or 'x**3 - x - 2' }}"
-               placeholder="Ej: x**3 - 2*x - 5">
+        <p style="text-align:center;"><strong>Construye tu función f(x):</strong></p>
+        <input type="text" name="funcion" id="funcion" readonly required 
+               value="{{ request.form.funcion or '' }}"
+               placeholder="Usa los botones para crear la función">
 
-        <div class="func-buttons">
-            <button type="button" class="btn-fun" onclick="add('sin(')">sin(</button>
-            <button type="button" class="btn-fun" onclick="add('cos(')">cos(</button>
-            <button type="button" class="btn-fun" onclick="add('tan(')">tan(</button>
-            <button type="button" class="btn-fun" onclick="add('ln(')">ln(</button>
-            <button type="button" class="btn-fun" onclick="add('exp(')">exp(</button>
-            <button type="button" class="btn-fun" onclick="add('sqrt(')">√(</button>
-            <button type="button" class="btn-fun" onclick="add('**')">^</button>
-            <button type="button" class="btn-fun" onclick="add('pi')">π</button>
-            <button type="button" class="btn-fun" onclick="add('E')">e</button>
+        <div class="teclado">
+            <button type="button" class="btn-fun btn-teclado" onclick="add('sin(')">sin(</button>
+            <button type="button" class="btn-fun btn-teclado" onclick="add('cos(')">cos(</button>
+            <button type="button" class="btn-fun btn-teclado" onclick="add('tan(')">tan(</button>
+            <button type="button" class="btn-fun btn-teclado" onclick="add('ln(')">ln(</button>
+            <button type="button" class="btn-fun btn-teclado" onclick="add('exp(')">exp(</button>
+            <button type="button" class="btn-fun btn-teclado" onclick="add('sqrt(')">√(</button>
+
+            <button type="button" class="btn-op btn-teclado" onclick="add('(')">(</button>
+            <button type="button" class="btn-op btn-teclado" onclick="add(')')">)</button>
+            <button type="button" class="btn-op btn-teclado" onclick="add('**')">xⁿ</button>
+            <button type="button" class="btn-op btn-teclado" onclick="add('/')">÷</button>
+            <button type="button" class="btn-op btn-teclado" onclick="add('*')">×</button>
+            <button type="button" class="btn-clear btn-teclado" onclick="clearAll()">Limpiar</button>
+
+            <button type="button" class="btn-teclado" onclick="add('7')">7</button>
+            <button type="button" class="btn-teclado" onclick="add('8')">8</button>
+            <button type="button" class="btn-teclado" onclick="add('9')">9</button>
+            <button type="button" class="btn-op btn-teclado" onclick="add('-')">−</button>
+            <button type="button" class="btn-op btn-teclado" onclick="add('+')">+</button>
+            <button type="button" class="btn-teclado" style="background:#67b168; grid-column: span 2; font-size:20px;" onclick="add('x')">VARIABLE x</button>
+
+            <button type="button" class="btn-teclado" onclick="add('4')">4</button>
+            <button type="button" class="btn-teclado" onclick="add('5')">5</button>
+            <button type="button" class="btn-teclado" onclick="add('6')">6</button>
+            <button type="button" class="btn-teclado" onclick="add('1')">1</button>
+            <button type="button" class="btn-teclado" onclick="add('2')">2</button>
+            <button type="button" class="btn-teclado" onclick="add('3')">3</button>
+
+            <button type="button" class="btn-teclado" onclick="add('0')">0</button>
+            <button type="button" class="btn-teclado" onclick="add('.')">.</button>
+            <button type="button" class="btn-teclado" onclick="add('pi')">π</button>
+            <button type="button" class="btn-teclado" onclick="add('E')">e</button>
+            <button type="button" class="btn-teclado" onclick="add('00')">00</button>
+            <button type="button" class="btn-clear btn-teclado" onclick="backspace()">Borrar</button>
         </div>
 
-        <div style="text-align:center;">
+        <div class="params">
             <div class="param-group">
                 <label>Punto inicial x₀</label>
-                <input type="number" step="any" name="x0" value="0" required>
+                <input type="number" step="any" name="x0" value="1" required>
             </div>
             <div class="param-group">
                 <label>Punto inicial x₁</label>
-                <input type="number" step="any" name="x1" value="1" required>
+                <input type="number" step="any" name="x1" value="2" required>
             </div>
             <div class="param-group">
                 <label>Tolerancia</label>
@@ -177,26 +202,20 @@
             </div>
         </div>
 
-        <button type="submit" class="submit-btn">Calcular Raíz con Secante</button>
+        <button type="submit" class="submit-btn">Calcular con Secante</button>
     </form>
 
+    <!-- Resultado igual que Newton -->
     {% if resultado %}
         <div class="resultado {{ 'success' if resultado.get('raiz') else 'danger' }}">
             {% if resultado.get('raiz') %}
-                <h2>Raíz encontrada: x ≈ {{ "%.12f" % resultado.raiz }}</h2>
+                <h2>Raíz: x ≈ {{ "%.12f" % resultado.raiz }}</h2>
                 <p><strong>f(raíz) = {{ "%.3e" % resultado.f_raiz }}</strong></p>
-                
                 {% if resultado.convergio %}
-                    <p class="verificacion-ok">
-                        Verificación correcta: f(raíz) ≈ 0
-                    </p>
+                    <p style="color:#27ae60; font-weight:bold;">Verificación correcta</p>
                 {% else %}
-                    <p class="verificacion-mal">
-                        ADVERTENCIA: f(raíz) NO es cero → posible convergencia falsa
-                    </p>
+                    <p style="color:#e74c3c; font-weight:bold;">ADVERTENCIA: posible convergencia falsa</p>
                 {% endif %}
-                
-                <p>Convergió en <strong>{{ resultado.iteraciones }}</strong> iteraciones</p>
             {% else %}
                 <h2>Error: {{ resultado.mensaje or resultado.error }}</h2>
             {% endif %}
@@ -204,22 +223,15 @@
             {% if resultado.historia %}
                 <h3>Tabla de iteraciones</h3>
                 <table>
-                    <tr>
-                        <th>n</th>
-                        <th>xₙ₋₁</th>
-                        <th>xₙ</th>
-                        <th>f(xₙ)</th>
-                        <th>xₙ₊₁</th>
-                        <th>Error absoluto</th>
-                    </tr>
+                    <tr><th>n</th><th>xₙ₋₁</th><th>xₙ</th><th>f(xₙ)</th><th>xₙ₊₁</th><th>Error</th></tr>
                     {% for fila in resultado.historia %}
                     <tr>
                         <td>{{ fila.n }}</td>
-                        <td>{{ "%.10f" % fila["x_{n-1}"] }}</td>
-                        <td>{{ "%.10f" % fila["x_n"] }}</td>
+                        <td>{{ "%.8f" % fila["x_{n-1}"] }}</td>
+                        <td>{{ "%.8f" % fila["x_n"] }}</td>
                         <td>{{ "%.3e" % fila["f(x_n)"] }}</td>
-                        <td>{{ "%.10f" % fila["x_{n+1}"] }}</td>
-                        <td>{{ "%.3e" % (fila.error if fila.error is not none else 0) }}</td>
+                        <td>{{ "%.8f" % fila["x_{n+1}"] }}</td>
+                        <td>{{ "%.3e" % (fila.error if fila.error else 0) }}</td>
                     </tr>
                     {% endfor %}
                 </table>
@@ -227,9 +239,9 @@
         </div>
 
         {% if grafica %}
-        <div class="grafica">
-            <h3>Gráfica de f(x) con la raíz encontrada</h3>
-            <img src="{{ grafica }}" alt="Gráfica">
+        <div class="grafica" style="text-align:center; margin:40px 0;">
+            <h3>Gráfica de f(x)</h3>
+            <img src="{{ grafica }}">
         </div>
         {% endif %}
     {% endif %}
@@ -237,9 +249,14 @@
 
 <script>
 function add(texto) {
+    document.getElementById('funcion').value += texto;
+}
+function clearAll() {
+    document.getElementById('funcion').value = '';
+}
+function backspace() {
     const input = document.getElementById('funcion');
-    input.focus();
-    input.value += texto;
+    input.value = input.value.slice(0, -1);
 }
 </script>
 </body>

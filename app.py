@@ -22,6 +22,9 @@ from copy import deepcopy
 from types import SimpleNamespace
 from models.newton_raphson import newton_raphson
 from models.secant import secante
+import base64 
+from io import BytesIO
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 #cod anterior
@@ -2271,6 +2274,71 @@ def process_floating_point():
                            procedure_html=procedure_html,
                            result_summary=result_summary)
 
+def generar_grafica(f_num, a=None, b=None, raiz=None, puntos_extra=None, titulo="f(x)"):
+    """
+    Genera una gráfica bonita de la función con la raíz marcada.
+    
+    Parámetros:
+    - f_num: función evaluable (devuelta por lambdify)
+    - a, b: límites del eje x (si None, se calculan automáticamente)
+    - raiz: valor de la raíz para marcar en rojo
+    - puntos_extra: lista de tuplas (x, label) para marcar puntos adicionales
+    - titulo: título de la gráfica
+    """
+    if a is None or b is None:
+        centro = raiz if raiz is not None else 0
+        a, b = centro - 10, centro + 10
+
+    x_vals = np.linspace(a, b, 800)
+    y_vals = []
+    for x in x_vals:
+        try:
+            y_vals.append(f_num(x))
+        except:
+            y_vals.append(np.nan)
+
+    plt.figure(figsize=(12, 7))
+    plt.plot(x_vals, y_vals, label="f(x)", color="#3498db", linewidth=3)
+    plt.axhline(0, color='black', linewidth=1.2, alpha=0.7)
+    plt.axvline(0, color='black', linewidth=1.2, alpha=0.7)
+    plt.grid(True, alpha=0.4, linestyle='--')
+
+    # Marcar la raíz si existe
+    if raiz is not None:
+        try:
+            y_raiz = f_num(raiz)
+            plt.plot(raiz, y_raiz, 'ro', markersize=12, label=f"Raíz ≈ {raiz:.10f}")
+            plt.annotate(f"Raíz: {raiz:.8f}", 
+                        xy=(raiz, y_raiz), xytext=(raiz, y_raiz + max(y_vals)/10),
+                        arrowprops=dict(arrowstyle='->', color='red', lw=2),
+                        fontsize=12, color='red', ha='center')
+        except:
+            pass
+
+    # Puntos extra (útil para Secante, Bisección, etc.)
+    if puntos_extra:
+        for px, label, color in puntos_extra:
+            try:
+                py = f_num(px)
+                plt.plot(px, py, 'o', color=color, markersize=10)
+                plt.text(px, py, f" {label}", fontsize=11, color=color, weight='bold')
+            except:
+                pass
+
+    plt.title(titulo, fontsize=18, pad=20, weight='bold')
+    plt.xlabel("x", fontsize=14)
+    plt.ylabel("f(x)", fontsize=14)
+    plt.legend(fontsize=12)
+    plt.tight_layout()
+
+    # Convertir a base64
+    buf = BytesIO()
+    plt.savefig(buf, format='png', dpi=130, facecolor='white')
+    buf.seek(0)
+    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+    return f"data:image/png;base64,{img_base64}"
+
 @app.route('/derivadas', methods=['GET', 'POST'])
 def derivadas():
     resultado = None
@@ -2305,53 +2373,111 @@ def derivadas():
 def newton():
     resultado = None
     grafica = None
-    funcion_str = request.form.get('funcion', 'x**3 - x - 2')
+    funcion_str = ""
 
     if request.method == 'POST':
         funcion_str = request.form.get('funcion', '').strip()
-        try:
-            x0 = float(request.form.get('x0', 1.5))
-            tol = float(request.form.get('tol', 1e-10))
-            max_iter = int(request.form.get('max_iter', 50))
+        if not funcion_str:
+            resultado = {'error': 'Por favor construye una función usando los botones.'}
+        else:
+            try:
+                x0 = float(request.form['x0'])
+                tol = float(request.form['tol'])
+                max_iter = int(request.form['max_iter'])
 
-            # Ejecutar el método de Newton-Raphson
-            resultado, grafica = newton_raphson(funcion_str, x0, tol, max_iter)
+                # Procesar la función
+                f = procesar_funcion(funcion_str)
 
-        except Exception as e:
-            resultado = {'raiz': None, 'mensaje': f'Error al calcular: {e}'}
+                # Ejecutar Newton-Raphson
+                from models.newton_raphson import newton_raphson
+                res = newton_raphson(f["num"], f["df_num"], x0, tol, max_iter)
 
-    return render_template('root_newton.html', 
+                # Generar gráfica
+                centro = res.get("raiz", x0)
+                grafica = generar_grafica(
+                    f_num=f["num"],
+                    a=centro-8, b=centro+8,
+                    raiz=res.get("raiz"),
+                    titulo=f"Newton-Raphson → f(x) = {funcion_str}"
+                )
+
+                resultado = {
+                    "raiz": res.get("raiz"),
+                    "f_raiz": res.get("f_raiz"),
+                    "iteraciones": res.get("iteraciones"),
+                    "historia": res.get("historia"),
+                    "convergio": res.get("convergio", False),
+                    "error": res.get("error"),
+                    "mensaje": res.get("mensaje")
+                }
+
+            except Exception as e:
+                resultado = {'error': f'Error en cálculo: {str(e)}'}
+
+    return render_template('root_newton.html',
                            resultado=resultado,
                            grafica=grafica,
                            funcion_str=funcion_str)
-
 x = symbols('x')
 
 @app.route('/secante', methods=['GET', 'POST'])
 def secante_route():
     resultado = None
-    funcion_str = request.form.get('funcion', 'x**3 - x - 2')
-    
+    grafica = None
+    funcion_str = ""
+
     if request.method == 'POST':
         funcion_str = request.form.get('funcion', '').strip()
-        try:
-            x0 = float(request.form.get('x0', 1.0))
-            x1 = float(request.form.get('x1', 2.0))
-            tol = float(request.form.get('tol', 1e-8))
-            max_iter = int(request.form.get('max_iter', 50))
-            
-            # Convertir la función a evaluable
-            f_sym = sympify(funcion_str)
-            f_num = lambdify(x, f_sym, modules=['numpy', 'math'])
-            
-            # Ejecutar método de la Secante
-            resultado = secante(f_num, x0, x1, tol, max_iter)
-            
-        except Exception as e:
-            resultado = {'raiz': None, 'mensaje': f'Error al calcular: {e}'}
+
+        if not funcion_str:
+            resultado = {'error': 'Por favor construye una función usando los botones.'}
+        else:
+            try:
+                x0 = float(request.form['x0'])
+                x1 = float(request.form['x1'])
+                tol = float(request.form['tol'])
+                max_iter = int(request.form['max_iter'])
+
+                # USAMOS LA FUNCIÓN SEGURA que ya arreglamos
+                f = procesar_funcion(funcion_str)
+
+                res = secante(f["num"], x0, x1, tol, max_iter)
+
+                # Generamos gráfica bonita
+                centro = res.get("raiz")
+                a = min(x0, x1) - 5
+                b = max(x0, x1) + 5
+                if centro is not None:
+                    a = min(a, centro - 4)
+                    b = max(b, centro + 4)
+
+                grafica = generar_grafica(
+                    f_num=f["num"],
+                    a=a, b=b,
+                    raiz=res.get("raiz"),
+                    puntos_extra=[
+                        (x0, "x₀", "orange"),
+                        (x1, "x₁", "purple")
+                    ],
+                    titulo=f"Método de la Secante → f(x) = {funcion_str}"
+                )
+
+                resultado = {
+                    "raiz": res.get("raiz"),
+                    "f_raiz": res.get("f_raiz"),
+                    "iteraciones": res.get("iteraciones"),
+                    "historia": res.get("historia"),
+                    "convergio": res.get("convergio", False),
+                    "error": res.get("error"),
+                    "mensaje": res.get("mensaje")
+                }
+
+            except Exception as e:
+                resultado = {'error': f'Error: {str(e)}'}
 
     return render_template('root_secant.html',
                            resultado=resultado,
+                           grafica=grafica,
                            funcion_str=funcion_str)
 
 
