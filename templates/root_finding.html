@@ -1,164 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metodos de Biseccion y Regla Falsa</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f6f7fb;
-            margin: 0;
-            padding: 20px;
-            color: #2c3e50;
-        }
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 24px 28px;
-            border-radius: 16px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-        }
-        h1 {
-            margin-top: 0;
-            margin-bottom: 6px;
-        }
-        p.lead {
-            margin-top: 0;
-            color: #7f8c8d;
-        }
-        form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 12px 18px;
-            margin: 20px 0 10px;
-        }
-        label {
-            font-weight: 600;
-            margin-bottom: 6px;
-            display: block;
-            color: #2c3e50;
-        }
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #dce1e6;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .full-row {
-            grid-column: 1 / -1;
-        }
-        button {
-            padding: 12px 18px;
-            border: none;
-            background: #000000;
-            color: white;
-            border-radius: 10px;
-            font-size: 15px;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 18px rgba(0,0,0,0.15);
-        }
-        .alert {
-            padding: 12px 14px;
-            background: #fdecea;
-            color: #c0392b;
-            border-radius: 10px;
-            border: 1px solid #f5c6cb;
-            margin: 10px 0 5px;
-        }
-        .card {
-            background: #f7f9fb;
-            border-radius: 12px;
-            padding: 14px 16px;
-            border: 1px solid #e3e8ee;
-            margin-bottom: 16px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        th, td {
-            border: 1px solid #d0d7df;
-            padding: 8px 10px;
-            text-align: center;
-        }
-        th {
-            background: #4b8fc9;
-            color: white;
-            font-weight: 700;
-        }
-        tbody tr:nth-child(odd) { background: #f3f6fa; }
-        tbody tr:nth-child(even) { background: #e8eff7; }
-        .steps-list {
-            list-style: decimal;
-            padding-left: 18px;
-            color: #34495e;
-        }
-        .details-panel {
-            margin-top: 16px;
-            border: 1px solid #e3e8ee;
-            border-radius: 12px;
-            padding: 12px 14px;
-            background: #f9fbfd;
-        }
-        .details-panel summary {
-            cursor: pointer;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-        .details-body {
-            margin-top: 10px;
-            display: grid;
-            gap: 12px;
-        }
-        .iteration-detail {
-            background: #fff;
-            border: 1px solid #e3e8ee;
-            border-radius: 10px;
-            padding: 10px 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        }
-        .iteration-title {
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-        .formula-list {
-            margin: 6px 0;
-            padding-left: 18px;
-            color: #2c3e50;
-        }
-        .formula-line {
-            margin: 4px 0;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 12px;
-            text-decoration: none;
-            color: #000000;
-            font-weight: 600;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body>
+
+<body id="root-finding-page">
     <div class="container">
         <h1>Metodos de Busqueda de Raices</h1>
-        <p class="lead">Integra los metodos de <strong>Biseccion</strong> y <strong>Regla Falsa</strong> con cada iteracion en tabla y una explicacion paso a paso.</p>
+        <p class="lead">Integra los metodos de <strong>Biseccion</strong> y <strong>Regla Falsa</strong> con cada
+            iteracion en tabla y una explicacion paso a paso.</p>
 
         <div class="card">
             <form method="POST">
                 <div class="full-row">
                     <label for="func">Funcion f(x)</label>
-                    <input type="text" id="func" name="func" value="{{ func_input }}" placeholder="Ejemplo: x**3 + 4*x**2 - 10 o lambda x: ..." required>
-                    <small>Usa <code>x</code> y funciones de <code>math</code> (sin eval directo). Ejemplo: <code>sin(x) + x**2</code>.</small>
+                    <input type="text" id="func" name="func" value="{{ func_input }}"
+                        placeholder="Ejemplo: x**3 + 4*x**2 - 10 o lambda x: ..." required>
+                    <small>Usa <code>x</code> y funciones de <code>math</code> (sin eval directo). Ejemplo:
+                        <code>sin(x) + x**2</code>.</small>
                 </div>
                 <div>
                     <label for="a">Limite inferior (a)</label>
@@ -175,8 +38,9 @@
                 <div>
                     <label for="method">Metodo</label>
                     <select id="method" name="method">
-                        <option value="biseccion" {% if method == 'biseccion' %}selected{% endif %}>Biseccion</option>
-                        <option value="falsa_posicion" {% if method == 'falsa_posicion' %}selected{% endif %}>Regla Falsa (Falsa Posicion)</option>
+                        <option value="biseccion" {% if method=='biseccion' %}selected{% endif %}>Biseccion</option>
+                        <option value="falsa_posicion" {% if method=='falsa_posicion' %}selected{% endif %}>Regla Falsa
+                            (Falsa Posicion)</option>
                     </select>
                 </div>
                 <div class="full-row">
@@ -184,106 +48,110 @@
                 </div>
             </form>
             {% if error %}
-                <div class="alert">{{ error }}</div>
+            <div class="alert">{{ error }}</div>
             {% endif %}
         </div>
 
         {% if result %}
-            <div class="card">
-                <h3>Resultado: {{ result.method_label }}</h3>
-                <p><strong>Raiz aproximada:</strong> {{ result.raiz|fmt_num }}</p>
-                <p><strong>Iteraciones:</strong> {{ result.iteraciones }}</p>
-                <p><strong>Intervalo actual:</strong> [{{ result.intervalo[0]|fmt_num }}, {{ result.intervalo[1]|fmt_num }}]</p>
-                {% if result.error_final is not none %}
-                    <p><strong>Error relativo final:</strong> {{ '%.6f' % result.error_final }} %</p>
-                {% else %}
-                    <p><strong>Error relativo final:</strong> --</p>
-                {% endif %}
-            </div>
+        <div class="card">
+            <h3>Resultado: {{ result.method_label }}</h3>
+            <p><strong>Raiz aproximada:</strong> {{ result.raiz|fmt_num }}</p>
+            <p><strong>Iteraciones:</strong> {{ result.iteraciones }}</p>
+            <p><strong>Intervalo actual:</strong> [{{ result.intervalo[0]|fmt_num }}, {{ result.intervalo[1]|fmt_num }}]
+            </p>
+            {% if result.error_final is not none %}
+            <p><strong>Error relativo final:</strong> {{ '%.6f' % result.error_final }} %</p>
+            {% else %}
+            <p><strong>Error relativo final:</strong> --</p>
+            {% endif %}
+        </div>
         {% endif %}
 
         {% if iterations %}
-            <div class="card">
-                <h3>Tabla de iteraciones ({{ method_label }})</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>iteracion</th>
-                            <th>x_l</th>
-                            <th>x_u</th>
-                            <th>x_r</th>
-                            <th>E_a</th>
-                            <th>v_l = f(x_l)</th>
-                            <th>v_u = f(x_u)</th>
-                            <th>v_r = f(x_r)</th>
-                            <th>x_u - x_l</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for it in iterations %}
-                        <tr>
-                            <td>+{{ it.iteracion }}</td>
-                            <td>{{ it.a|fmt_num }}</td>
-                            <td>{{ it.b|fmt_num }}</td>
-                            <td>{{ it.xr|fmt_num }}</td>
-                            <td>
-                                {% if it.error_abs is none %}
-                                    0.000000
-                                {% else %}
-                                    {{ '%.6f' % it.error_abs }}
-                                {% endif %}
-                            </td>
-                            <td>{{ it.fa|fmt_num }}</td>
-                            <td>{{ it.fb|fmt_num }}</td>
-                            <td>{{ it.fxr|fmt_num }}</td>
-                            <td>{{ it.intervalo_longitud|fmt_num }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card">
+            <h3>Tabla de iteraciones ({{ method_label }})</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>iteracion</th>
+                        <th>x_l</th>
+                        <th>x_u</th>
+                        <th>x_r</th>
+                        <th>E_a</th>
+                        <th>v_l = f(x_l)</th>
+                        <th>v_u = f(x_u)</th>
+                        <th>v_r = f(x_r)</th>
+                        <th>x_u - x_l</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in iterations %}
+                    <tr>
+                        <td>+{{ it.iteracion }}</td>
+                        <td>{{ it.a|fmt_num }}</td>
+                        <td>{{ it.b|fmt_num }}</td>
+                        <td>{{ it.xr|fmt_num }}</td>
+                        <td>
+                            {% if it.error_abs is none %}
+                            0.000000
+                            {% else %}
+                            {{ '%.6f' % it.error_abs }}
+                            {% endif %}
+                        </td>
+                        <td>{{ it.fa|fmt_num }}</td>
+                        <td>{{ it.fb|fmt_num }}</td>
+                        <td>{{ it.fxr|fmt_num }}</td>
+                        <td>{{ it.intervalo_longitud|fmt_num }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-                <h4>Explicacion paso a paso</h4>
+            <h4>Explicación paso a paso</h4>
+            <div class="section-box">
                 <ol class="steps-list">
                     {% for it in iterations %}
-                        <li>Iteracion {{ it.iteracion }}: {{ it.accion }}</li>
+                    <li>Iteración {{ it.iteracion }}: {{ it.accion }}</li>
                     {% endfor %}
                 </ol>
-
-                <details class="details-panel">
-                    <summary>Mostrar formulas de cada iteracion</summary>
-                    <div class="details-body">
-                        {% for it in iterations %}
-                            <div class="iteration-detail">
-                                <div class="iteration-title">Iteracion {{ it.iteracion }}</div>
-                                <p class="formula-line"><strong>Calculo de xr:</strong> {{ it.xr_formula }}</p>
-                                <ul class="formula-list">
-                                    {% for line in it.detalles %}
-                                        <li>{{ line }}</li>
-                                    {% endfor %}
-                                </ul>
-                                <p class="formula-line">
-                                    <strong>Producto:</strong>
-                                    f(a)*f(xr) = {{ it.producto|fmt_num }} -> {{ it.accion }}
-                                </p>
-                                {% if it.intervalo_siguiente %}
-                                    <p class="formula-line">
-                                        <strong>Intervalo siguiente:</strong>
-                                        [{{ it.intervalo_siguiente[0]|fmt_num }}, {{ it.intervalo_siguiente[1]|fmt_num }}]
-                                    </p>
-                                {% endif %}
-                                {% if it.error_rel_pct is not none %}
-                                    <p class="formula-line">
-                                        <strong>Error relativo:</strong> {{ '%.6f' % it.error_rel_pct }} %
-                                    </p>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                </details>
             </div>
+
+            <details class="details-panel">
+                <summary>Mostrar fórmulas de cada iteración</summary>
+                <div class="section-box details-body">
+                    {% for it in iterations %}
+                    <div class="iteration-detail">
+                        <div class="iteration-title">Iteración {{ it.iteracion }}</div>
+                        <p class="formula-line"><strong>Cálculo de xr:</strong> {{ it.xr_formula }}</p>
+                        <ul class="formula-list">
+                            {% for line in it.detalles %}
+                            <li>{{ line }}</li>
+                            {% endfor %}
+                        </ul>
+                        <p class="formula-line">
+                            <strong>Producto:</strong> f(a)*f(xr) = {{ it.producto|fmt_num }} -> {{ it.accion }}
+                        </p>
+                        {% if it.intervalo_siguiente %}
+                        <p class="formula-line">
+                            <strong>Intervalo siguiente:</strong>
+                            [{{ it.intervalo_siguiente[0]|fmt_num }}, {{ it.intervalo_siguiente[1]|fmt_num }}]
+                        </p>
+                        {% endif %}
+                        {% if it.error_rel_pct is not none %}
+                        <p class="formula-line">
+                            <strong>Error relativo:</strong> {{ '%.6f' % it.error_rel_pct }} %
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+
+        </div>
         {% endif %}
 
         <a class="back-link" href="/"><- Volver al inicio</a>
     </div>
 </body>
+
 </html>

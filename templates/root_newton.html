@@ -2,150 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Newton-Raphson - Seguro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton-Raphson - Morado</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            max-width: 1100px;
-            margin: 30px auto;
-            background: #f8f9fa;
-            padding: 20px;
-            color: #2c3e50;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-        }
-        h1 { text-align: center; color: #27ae60; margin-bottom: 10px; }
-        .back-link { text-align: center; margin-bottom: 20px; }
-        .back-link a { color: #3498db; text-decoration: none; font-weight: bold; }
-        .back-link a:hover { text-decoration: underline; }
-
-        /* Campo de función solo lectura */
-        #funcion {
-            width: 100%;
-            max-width: 750px;
-            padding: 16px;
-            font-size: 20px;
-            font-family: 'Courier New', monospace;
-            background: #f1f3f5;
-            border: 3px solid #27ae60;
-            border-radius: 12px;
-            text-align: center;
-            margin: 20px auto;
-            display: block;
-            letter-spacing: 1px;
-        }
-
-        /* Panel de botones */
-        .teclado {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 10px;
-            max-width: 800px;
-            margin: 20px auto;
-        }
-        .btn-teclado {
-            padding: 16px;
-            font-size: 18px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-teclado:hover { background: #2980b9; }
-        .btn-fun { background: #9b59b6; }
-        .btn-fun:hover { background: #8e44ad; }
-        .btn-op { background: #e67e22; }
-        .btn-op:hover { background: #d35400; }
-        .btn-clear { background: #e74c3c; grid-column: span 2; }
-        .btn-clear:hover { background: #c0392b; }
-
-        .params {
-            text-align: center;
-            margin: 30px 0;
-        }
-        .param-group {
-            display: inline-block;
-            margin: 0 15px;
-        }
-        .param-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .submit-btn {
-            background: #27ae60;
-            color: white;
-            font-size: 20px;
-            padding: 18px 40px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 100%;
-            max-width: 500px;
-            margin: 40px auto;
-            display: block;
-        }
-        .submit-btn:hover { background: #219653; }
-
-        .resultado, .grafica { margin-top: 40px; }
-        .success { background: #d4edda; padding: 20px; border-radius: 12px; border-left: 6px solid #27ae60; }
-        .danger { background: #f8d7da; padding: 20px; border-radius: 12px; border-left: 6px solid #e74c3c; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { padding: 12px; border: 1px solid #ccc; text-align: center; }
-        th { background: #27ae60; color: white; }
-    </style>
+    <script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body>
-<div class="container">
-    <h1>Método de Newton-Raphson</h1>
-    <div class="back-link">
-        <a href="{{ url_for('home') }}">Volver al menú principal</a>
-    </div>
+<body id="root-newton">
 
-    <form method="POST">
-        <p style="text-align:center;"><strong>Construye tu función f(x):</strong></p>
+    <!-- Enlace volver al menú -->
+    <a href="{{ url_for('home') }}" class="back-link">← Volver al menú principal</a>
+
+    <div class="main-card">
+        <h1>Método de Newton-Raphson</h1>
         
-        <!-- Campo solo lectura -->
-        <input type="text" name="funcion" id="funcion" readonly required 
+
+        <!-- Campo función solo lectura -->
+        <input type="text" name="funcion" id="funcion" readonly
                value="{{ request.form.funcion or '' }}"
                placeholder="Haz clic en los botones para construir la función">
 
         <!-- Teclado matemático -->
         <div class="teclado">
-            <!-- Fila 1: Funciones -->
-            <button type="button" class="btn-fun btn-teclado" onclick="add('sin(')">sin(</button>
-            <button type="button" class="btn-fun btn-teclado" onclick="add('cos(')">cos(</button>
-            <button type="button" class="btn-fun btn-teclado" onclick="add('tan(')">tan(</button>
-            <button type="button" class="btn-fun btn-teclado" onclick="add('ln(')">ln(</button>
-            <button type="button" class="btn-fun btn-teclado" onclick="add('exp(')">exp(</button>
-            <button type="button" class="btn-fun btn-teclado" onclick="add('sqrt(')">√(</button>
+            <button type="button" class="btn-fun" onclick="add('sin(')">sin(</button>
+            <button type="button" class="btn-fun" onclick="add('cos(')">cos(</button>
+            <button type="button" class="btn-fun" onclick="add('tan(')">tan(</button>
+            <button type="button" class="btn-fun" onclick="add('ln(')">ln(</button>
+            <button type="button" class="btn-fun" onclick="add('exp(')">exp(</button>
+            <button type="button" class="btn-fun" onclick="add('sqrt(')">√(</button>
 
-            <!-- Fila 2: Operaciones -->
-            <button type="button" class="btn-op btn-teclado" onclick="add('(')">(</button>
-            <button type="button" class="btn-op btn-teclado" onclick="add(')')">)</button>
-            <button type="button" class="btn-op btn-teclado" onclick="add('**')">xⁿ</button>
-            <button type="button" class="btn-op btn-teclado" onclick="add('/')">÷</button>
-            <button type="button" class="btn-op btn-teclado" onclick="add('*')">VARIABLE x</button>
-            <button type="button" class="btn-clear btn-teclado" onclick="clearAll()">Limpiar</button>
+            <button type="button" class="btn-op" onclick="add('(')">(</button>
+            <button type="button" class="btn-op" onclick="add(')')">)</button>
+            <button type="button" class="btn-op" onclick="add('**')">xⁿ</button>
+            <button type="button" class="btn-op" onclick="add('/')">÷</button>
+            <button type="button" class="btn-op" onclick="add('*')">×</button>
+            <button type="button" class="btn-clear" onclick="clearAll()">Limpiar</button>
 
-            <!-- Fila 3: Números y x -->
             <button type="button" class="btn-teclado" onclick="add('7')">7</button>
             <button type="button" class="btn-teclado" onclick="add('8')">8</button>
             <button type="button" class="btn-teclado" onclick="add('9')">9</button>
-            <button type="button" class="btn-op btn-teclado" onclick="add('-')">−</button>
-            <button type="button" class="btn-op btn-teclado" onclick="add('+')">+</button>
-            <button type="button" class="btn-teclado" style="background:#27ae60;" onclick="add('x')">x</button>
+            <button type="button" class="btn-op" onclick="add('-')">−</button>
+            <button type="button" class="btn-op" onclick="add('+')">+</button>
+            <button type="button" class="btn-teclado" onclick="add('x')">x</button>
 
             <button type="button" class="btn-teclado" onclick="add('4')">4</button>
             <button type="button" class="btn-teclado" onclick="add('5')">5</button>
@@ -159,45 +58,39 @@
             <button type="button" class="btn-teclado" onclick="add('pi')">π</button>
             <button type="button" class="btn-teclado" onclick="add('E')">e</button>
             <button type="button" class="btn-teclado" onclick="add('00')">00</button>
-            <button type="button" class="btn-clear btn-teclado" onclick="backspace()">←</button>
+            <button type="button" class="btn-clear" onclick="backspace()">←</button>
         </div>
 
-        <div class="params">
-            <div class="param-group">
-                <label>Valor inicial x₀</label>
-                <input type="number" step="any" name="x0" value="1.5" required>
+        <form method="POST">
+            <div class="params">
+                <div class="param-group">
+                    <label>Valor inicial x₀</label>
+                    <input type="number" step="any" name="x0" value="1.5" required>
+                </div>
+                <div class="param-group">
+                    <label>Tolerancia</label>
+                    <input type="number" step="any" name="tol" value="1e-10">
+                </div>
+                <div class="param-group">
+                    <label>Máx. iteraciones</label>
+                    <input type="number" name="max_iter" value="50">
+                </div>
             </div>
-            <div class="param-group">
-                <label>Tolerancia</label>
-                <input type="number" step="any" name="tol" value="1e-10">
-            </div>
-            <div class="param-group">
-                <label>Máx. iteraciones</label>
-                <input type="number" name="max_iter" value="50">
-            </div>
-        </div>
+            <button type="submit" class="submit-btn">Calcular Raíz con Newton-Raphson</button>
+        </form>
 
-        <button type="submit" class="submit-btn">Calcular Raíz con Newton-Raphson</button>
-    </form>
-
-    <!-- Resultado (igual que antes) -->
-    {% if resultado %}
-        <div class="resultado {{ 'success' if resultado.get('raiz') else 'danger' }}">
+        {% if resultado %}
+        <div class="result-box {{ 'success' if resultado.get('raiz') else 'danger' }}">
             {% if resultado.get('raiz') %}
-                <h2>Raíz: x ≈ {{ "%.12f" % resultado.raiz }}</h2>
+                <h3>Raíz: x ≈ {{ "%.12f" % resultado.raiz }}</h3>
                 <p><strong>f(raíz) = {{ "%.3e" % resultado.f_raiz }}</strong></p>
-                {% if resultado.convergio %}
-                    <p style="color:#27ae60; font-weight:bold;">Verificación correcta: f(raíz) ≈ 0</p>
-                {% else %}
-                    <p style="color:#e74c3c; font-weight:bold;">ADVERTENCIA: f(raíz) NO es cero</p>
-                {% endif %}
                 <p>Iteraciones: <strong>{{ resultado.iteraciones }}</strong></p>
             {% else %}
-                <h2>Error: {{ resultado.mensaje or resultado.error }}</h2>
+                <h3>Error: {{ resultado.mensaje or resultado.error }}</h3>
             {% endif %}
 
             {% if resultado.historia %}
-                <h3>Iteraciones</h3>
+                <h4>Iteraciones</h4>
                 <table>
                     <tr><th>n</th><th>xₙ</th><th>f(xₙ)</th><th>f'(xₙ)</th><th>xₙ₊₁</th><th>Error</th></tr>
                     {% for fila in resultado.historia %}
@@ -213,30 +106,21 @@
                 </table>
             {% endif %}
         </div>
-
-        {% if grafica %}
-        <div class="grafica">
-            <h3>Gráfica de f(x)</h3>
-            <img src="{{ grafica }}" style="max-width:100%; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.1);">
-        </div>
         {% endif %}
-    {% endif %}
-</div>
+    </div>
 
 <script>
 function add(texto) {
-    const input = document.getElementById('funcion');
-    input.value += texto;
+    document.getElementById('funcion').value += texto;
 }
-
 function clearAll() {
     document.getElementById('funcion').value = '';
 }
-
 function backspace() {
     const input = document.getElementById('funcion');
     input.value = input.value.slice(0, -1);
 }
 </script>
+
 </body>
 </html>
