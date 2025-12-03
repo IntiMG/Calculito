@@ -1104,3 +1104,137 @@ footer {
     margin-left: 20px;
     margin-bottom: 4px;
 }
+
+/*----------------------------------------------------------------------*/
+/* STYLES FOR NEWTON RAPHSON PAGE */
+#root-newton {
+    font-family: "Inter", "Segoe UI", sans-serif;
+    background: #f3e8ff; /* lila muy suave */
+    padding: 40px 0;
+    color: #a855f7; /* color valor inicial , etc */
+}
+
+#root-newton .back-link {
+    display: block;
+    margin-left: 30px;
+    margin-bottom: 20px;
+    color: #a855f7;
+    text-decoration: none;
+    font-weight: 600;
+}
+#root-newton .back-link:hover { text-decoration: underline; }
+
+#root-newton .main-card {
+    background: white;
+    max-width: 900px;
+    margin: auto;
+    padding: 40px;
+    border-radius: 22px;
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
+    border: 1px solid rgba(140, 82, 255, 0.18);
+}
+
+#root-newton h1 {
+    text-align: center;
+    font-size: 34px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #a855f7, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 5px;
+}
+
+
+
+#root-newton #funcion {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    font-family: 'Courier New', monospace;
+    background: #f5f0ff;
+    border: 2px solid #a855f7;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#root-newton .teclado {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+#root-newton .teclado button {
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+#root-newton .btn-fun { background: #a78bfa; color: white; }
+#root-newton .btn-fun:hover { background: #8b5cf6; }
+
+#root-newton .btn-op { background: #c084fc; color: white; }
+#root-newton .btn-op:hover { background: #9333ea; }
+
+#root-newton .btn-teclado { background: #ddd6fe; }
+#root-newton .btn-teclado:hover { background: #a78bfa; color: white; }
+
+#root-newton .btn-clear { background: #d8b4fe; }
+#root-newton .btn-clear:hover { background: #c084fc; color: white; }
+
+#root-newton .params {
+    text-align: center;
+    margin: 30px 0;
+}
+#root-newton .param-group { display: inline-block; margin: 0 15px; }
+#root-newton .param-group label { display: block; font-weight: 600; margin-bottom: 5px; }
+
+#root-newton .submit-btn {
+    width: 100%;
+    max-width: 400px;
+    padding: 16px;
+    font-size: 18px;
+    background: #a855f7;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    margin: auto;
+    display: block;
+    cursor: pointer;
+    font-weight: 600;
+}
+#root-newton .submit-btn:hover { background: #a855f7; }
+
+#root-newton .result-box {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    padding: 22px;
+    border-radius: 18px;
+    margin-top: 35px;
+    box-shadow: 0 4px 15px rgba(124, 58, 237, 0.12);
+}
+
+#root-newton .result-box.success { border-left: 6px solid #a855f7; }
+#root-newton .result-box.danger { border-left: 6px solid #e0aaff; }
+
+#root-newton table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+#root-newton th {
+    background: #a855f7;
+    color: white;
+    padding: 10px;
+}
+#root-newton td {
+    padding: 10px;
+    border-bottom: 1px solid #eadcff;
+    text-align: center;
+    background: #fff;
+}
+#root-newton tr:nth-child(even) td { background: #f3e8ff; }
