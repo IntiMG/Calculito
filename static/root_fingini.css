@@ -1,0 +1,138 @@
+/* --------------------------------------------- */
+/*      ESTILOS AISLADOS PARA root_finding.html  */
+/* --------------------------------------------- */
+
+#root-finding-page {
+    font-family: "Segoe UI", sans-serif;
+    background: #f5f6fa;
+    padding: 20px;
+}
+
+/* ---------- CONTENEDOR PRINCIPAL ---------- */
+#root-finding-page .main-container {
+    max-width: 950px;
+    margin: auto;
+    background: #ffffff;
+    padding: 35px;
+    border-radius: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* ---------- TITULO ---------- */
+#root-finding-page h1 {
+    text-align: center;
+    color: #4a148c;
+    margin-bottom: 25px;
+}
+
+/* ---------- FORMULARIO ---------- */
+#root-finding-page label {
+    font-weight: 600;
+    color: #374151;
+}
+
+#root-finding-page input,
+#root-finding-page select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #d1d5db;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    transition: 0.2s;
+}
+
+#root-finding-page input:focus,
+#root-finding-page select:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 4px #c4b5fd;
+}
+
+#root-finding-page button {
+    width: 100%;
+    padding: 12px;
+    background: #7c3aed;
+    border: none;
+    color: white;
+    font-size: 17px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#root-finding-page button:hover {
+    background: #5b21b6;
+}
+
+/* ---------- RESULTADOS ---------- */
+#root-finding-page .result-box {
+    background: #ede9fe;
+    padding: 20px;
+    border-radius: 14px;
+    border-left: 6px solid #7c3aed;
+    margin-top: 30px;
+    color: #3b0764;
+}
+
+/* ---------- TABLA ---------- */
+#root-finding-page table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 25px;
+    font-size: 14px;
+}
+
+#root-finding-page th {
+    background: #7c3aed;
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+#root-finding-page td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+#root-finding-page tr:nth-child(even) {
+    background: #f3e8ff;
+}
+
+/* ---------- CONTENEDORES DE SECCIONES ---------- */
+#root-finding-page .section-box {
+    background: #f8fafc;
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 14px;
+    border: 2px solid #e2e8f0;
+}
+
+#root-finding-page .section-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+#root-finding-page .section-content {
+    font-size: 15px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+/* ---------- BOTÓN MOSTRAR/OCULTAR ---------- */
+#root-finding-page .toggle-btn {
+    background: #6366f1;
+    padding: 8px 14px;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    float: right;
+    transition: 0.2s;
+}
+
+#root-finding-page .toggle-btn:hover {
+    background: #4f46e5;
+}
