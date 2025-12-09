@@ -6,7 +6,7 @@ import math
 def _math_env() -> dict:
     """Entorno seguro con funciones matemáticas estándar."""
     env = {name: getattr(math, name) for name in dir(math) if not name.startswith("_")}
-    env.update({"abs": abs, "pow": pow})
+    env.update({"abs": abs, "pow": pow, "ln": math.log})
     return env
 
 
@@ -20,18 +20,17 @@ def parse_function(func_str: str) -> Callable[[float], float]:
     cleaned = func_str.strip()
 
     try:
+        compiled = compile(cleaned, "<user_func>", "eval")
         if cleaned.startswith("lambda"):
-            fn = eval(cleaned, {"__builtins__": {}}, env)
+            fn = eval(compiled, {"__builtins__": {}}, env)
             if not callable(fn):
                 raise ValueError
             return fn
 
         def fn(x: float) -> float:
             local_env = {**env, "x": x}
-            return float(eval(cleaned, {"__builtins__": {}}, local_env))
+            return float(eval(compiled, {"__builtins__": {}}, local_env))
 
-        # Validación rápida para detectar expresiones inválidas
-        fn(0.0)
         return fn
     except Exception as exc:  # noqa: BLE001
         raise ValueError(
