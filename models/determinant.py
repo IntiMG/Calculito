@@ -28,8 +28,19 @@ def has_proportional_rows(matrix: List[List[Fraction]]) -> bool:
     for i in range(n):
         for k in range(i + 1, n):
             if matrix[i] and matrix[k]:
-                ratio = matrix[i][0] / matrix[k][0]
-                if all(matrix[i][j] == ratio * matrix[k][j] for j in range(n)):
+                # busca el primer par no nulo para evitar divisiones por cero
+                pivot = None
+                for j in range(len(matrix[i])):
+                    if matrix[k][j] != 0 or matrix[i][j] != 0:
+                        pivot = j
+                        break
+                if pivot is None:
+                    # filas completamente nulas (ya capturadas en has_zero_row_or_col)
+                    continue
+                if matrix[k][pivot] == 0:
+                    continue
+                ratio = matrix[i][pivot] / matrix[k][pivot]
+                if all(matrix[k][j] * ratio == matrix[i][j] for j in range(n)):
                     return True
     return False
 

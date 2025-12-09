@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
+import re
 from models.binary_operations import dec_to_bin, get_hex_conversion_table, hex_to_bin_proc, get_signed_c2, floating_point
 import numpy as np
 from models.derivatives import procesar_funcion
@@ -455,6 +456,31 @@ def verify_identity(kind, ctx):
                 "valid": matrices_equal(L, R), "error": None
             }
 
+        if kind == "t_scalar_sum":              # (r(A+B))^T = r(A^T + B^T)
+            AB, _ = ArOperations.addTwoMatrixWithSteps(A, B)
+            rAB, _ = ArOperations.multiplyMatrixByScalarWithSteps(AB, r)
+            L, _ = ArOperations.transposeMatrixWithSteps(rAB)
+            lhs_steps += [
+                _snap("A + B", ("A", A), ("B", B), ("A+B", AB)),
+                _snap(f"{_fmt_num(r)}·(A+B)", ("A+B", AB), ("r(A+B)", rAB)),
+                _snap("(r(A+B))^T", ("r(A+B)", rAB), ("LHS", L)),
+            ]
+
+            AT, _ = ArOperations.transposeMatrixWithSteps(A)
+            BT, _ = ArOperations.transposeMatrixWithSteps(B)
+            AT_BT, _ = ArOperations.addTwoMatrixWithSteps(AT, BT)
+            R, _ = ArOperations.multiplyMatrixByScalarWithSteps(AT_BT, r)
+            rhs_steps += [
+                _snap("A^T y B^T", ("A^T", AT), ("B^T", BT)),
+                _snap("A^T + B^T", ("A^T", AT), ("B^T", BT), ("A^T+B^T", AT_BT)),
+                _snap(f"{_fmt_num(r)}·(A^T+B^T)", ("A^T+B^T", AT_BT), ("RHS", R)),
+            ]
+            return {
+                "lhs_steps": lhs_steps, "rhs_steps": rhs_steps,
+                "lhs_result": as_text_matrix(L), "rhs_result": as_text_matrix(R),
+                "valid": matrices_equal(L, R), "error": None
+            }
+
         if kind == "t_scalar":                  # (rA)^T = r A^T
             rA, _ = ArOperations.multiplyMatrixByScalarWithSteps(A, r)
             L,  _ = ArOperations.transposeMatrixWithSteps(rA)
@@ -628,6 +654,11 @@ PROP_META = {
         "needs": {"A", "B"},
         "check": lambda d: d["A"] == d["B"]
     },
+    "t_scalar_sum": {
+        "label": "(r(A + B))^T = r(A^T + B^T)",
+        "needs": {"A", "B", "r"},
+        "check": lambda d: d["A"] == d["B"]
+    },
     "t_scalar": {
         "label": "(rA)^T = rA^T",
         "needs": {"A", "r"},
@@ -721,7 +752,7 @@ def solve_linear_system():
     try:
         A = np.array(coefficients, dtype=float)
         b = np.array(results, dtype=float)
-        solution = np.linalg.solve(A, b)
+        solution = np.linalg.solve(A, b).tolist()
         
         return render_template(
             "sistema_ecuaciones.html",
@@ -1327,6 +1358,90 @@ def matrix_multiply_solve():
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error: Ingrese valores válidos (admite fracciones tipo 3/2). {str(e)}")
     except Exception as e:
         return render_template("matrix_multiply.html", step=2, rows_a=rows_a, cols_a=cols_a, rows_b=rows_b, cols_b=cols_b, matrix_a=matrix_a, matrix_b=matrix_b, error=f"Error al realizar la multiplicación: {str(e)}")
+
+@app.route("/matrix_chain", methods=["GET", "POST"])
+def matrix_chain():
+    if request.method == "GET":
+        return render_template("matrix_chain.html", step=1)
+
+    stage = request.form.get("stage", "1")
+    try:
+        if stage == "1":
+            mode = request.form.get("mode", "right")
+            ar = int(request.form.get("ar", "2"))
+            ac = int(request.form.get("ac", "2"))
+            br = int(request.form.get("br", str(ar)))
+            bc = int(request.form.get("bc", str(ac)))
+            cr = int(request.form.get("cr", "2"))
+            cc = int(request.form.get("cc", "2"))
+            k_raw = request.form.get("k", "1")
+
+            for v in (ar, ac, br, bc, cr, cc):
+                if not (1 <= v <= 10):
+                    raise ValueError("Las dimensiones deben estar entre 1 y 10.")
+            if ar != br or ac != bc:
+                raise ValueError("A y B deben tener las mismas dimensiones.")
+            if mode == "right" and ac != cr:
+                raise ValueError("Para (A + kB)·C se requiere que cols(A)=rows(C).")
+            if mode == "left" and cc != ar:
+                raise ValueError("Para C·(A + kB) se requiere que cols(C)=rows(A).")
+
+            return render_template(
+                "matrix_chain.html",
+                step=2,
+                mode=mode,
+                ar=ar, ac=ac, br=br, bc=bc, cr=cr, cc=cc,
+                k=k_raw,
+            )
+
+        if stage == "2":
+            mode = request.form.get("mode", "right")
+            ar = int(request.form["ar"]); ac = int(request.form["ac"])
+            br = int(request.form["br"]); bc = int(request.form["bc"])
+            cr = int(request.form["cr"]); cc = int(request.form["cc"])
+            k = safe_fraction(request.form.get("k", "1"))
+
+            A = [[safe_fraction(request.form.get(f"A_{i}_{j}", 0)) for j in range(ac)] for i in range(ar)]
+            B = [[safe_fraction(request.form.get(f"B_{i}_{j}", 0)) for j in range(bc)] for i in range(br)]
+            C = [[safe_fraction(request.form.get(f"C_{i}_{j}", 0)) for j in range(cc)] for i in range(cr)]
+
+            if ar != br or ac != bc:
+                raise ValueError("A y B deben tener las mismas dimensiones.")
+            if mode == "right" and ac != cr:
+                raise ValueError("Para (A + kB)·C se requiere que cols(A)=rows(C).")
+            if mode == "left" and cc != ar:
+                raise ValueError("Para C·(A + kB) se requiere que cols(C)=rows(A).")
+
+            steps = []
+            kB, _ = ArOperations.multiplyMatrixByScalarWithSteps(B, k)
+            steps.append(_snap(f"{_fmt_num(k)}·B", ("B", B), (f"{_fmt_num(k)}B", kB)))
+
+            A_plus_kB, _ = ArOperations.addTwoMatrixWithSteps(A, kB)
+            steps.append(_snap("A + kB", ("A", A), (f"{_fmt_num(k)}B", kB), ("A+kB", A_plus_kB)))
+
+            if mode == "right":
+                result, _ = ArOperations.multiplyTwoMatrixWithSteps(A_plus_kB, C)
+                steps.append(_snap("(A+kB)·C", ("A+kB", A_plus_kB), ("C", C), ("Resultado", result)))
+            else:
+                result, _ = ArOperations.multiplyTwoMatrixWithSteps(C, A_plus_kB)
+                steps.append(_snap("C·(A+kB)", ("C", C), ("A+kB", A_plus_kB), ("Resultado", result)))
+
+            session["current_matrix"] = fraction_to_string(result)
+            session["previous_op"] = "chain"
+
+            return render_template(
+                "matrix_chain.html",
+                step=3,
+                mode=mode,
+                ar=ar, ac=ac, br=br, bc=bc, cr=cr, cc=cc,
+                k=k,
+                A=A, B=B, C=C,
+                combo=A_plus_kB,
+                result=result,
+                steps=steps,
+            )
+    except Exception as e:
+        return render_template("matrix_chain.html", step=1, error=str(e))
 
 #ya
 @app.route('/matrix_transpose', methods=['GET', 'POST'])
@@ -2111,6 +2226,25 @@ def root_finding():
     method_label = "Método de Bisección"
     xr_label = "xm (punto medio)"
 
+    def _pretty_func(expr: str) -> str:
+        # Representación simple para mostrar en pantalla (texto plano).
+        return expr.replace("**", "^").replace("*", "·")
+
+    def _latex_func(expr: str) -> str:
+        """
+        Conversión básica a una sintaxis amigable para MathJax.
+        - **n -> ^{n}
+        - *   -> espacio (multiplicación implícita)
+        """
+        s = expr.strip()
+        s = s.replace(" ", "")
+        s = s.replace("**", "^")
+        # potencia ^n -> ^{n}
+        s = re.sub(r"\^(\d+)", r"^{\1}", s)
+        # multiplicación implícita
+        s = s.replace("*", " ")
+        return s
+
     if request.method == "POST":
         method = request.form.get("method", "biseccion")
         func_input = request.form.get("func", func_input).strip()
@@ -2161,12 +2295,14 @@ def root_finding():
         method=method,
         method_label=method_label,
         func_input=func_input,
+        func_pretty=_pretty_func(func_input),
         a_str=a_str,
         b_str=b_str,
         tol_str=tol_str,
         iterations=iterations,
         result=result,
         xr_label=xr_label,
+        func_latex=_latex_func(func_input),
     )
 
 

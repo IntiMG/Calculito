@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metodos de Biseccion y Regla Falsa</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body id="root-finding-page">
@@ -55,6 +57,7 @@
         {% if result %}
         <div class="card">
             <h3>Resultado: {{ result.method_label }}</h3>
+            <p><strong>f(x):</strong> <span>\( {{ func_latex }} \)</span></p>
             <p><strong>Raiz aproximada:</strong> {{ result.raiz|fmt_num }}</p>
             <p><strong>Iteraciones:</strong> {{ result.iteraciones }}</p>
             <p><strong>Intervalo actual:</strong> [{{ result.intervalo[0]|fmt_num }}, {{ result.intervalo[1]|fmt_num }}]
@@ -70,6 +73,7 @@
         {% if iterations %}
         <div class="card">
             <h3>Tabla de iteraciones ({{ method_label }})</h3>
+            <p><strong>f(x):</strong> <span>\( {{ func_latex }} \)</span></p>
             <table>
                 <thead>
                     <tr>

@@ -467,7 +467,22 @@
             <div class="steps-title">Proceso de Resolución - Método de Eliminación Gaussiana</div>
             {% for step_line in steps %}
             <div class="step-item">
-                <div class="step-description">{{ step_line }}</div>
+                {% if step_line.matrix is defined and step_line.results is defined %}
+                    <div class="step-description">{{ step_line.description }}</div>
+                    <div class="matrix-display">
+                        {% for row in step_line.matrix %}
+                        <div class="matrix-row">
+                            {% for val in row %}
+                            <div class="matrix-cell">{{ val }}</div>
+                            {% endfor %}
+                            <div class="matrix-separator">|</div>
+                            <div class="matrix-cell">{{ step_line.results[loop.index0] }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="step-description">{{ step_line }}</div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

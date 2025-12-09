@@ -67,9 +67,13 @@ class RootFinding:
 
     @staticmethod
     def _absolute_error(current: float, previous: Optional[float]) -> Optional[float]:
-        if previous is None:
+        """
+        Error absoluto normalizado: |xr(k) - xr(k-1)| / |xr(k)|
+        (si current==0 o no hay iteración previa, no se calcula).
+        """
+        if previous is None or current == 0:
             return None
-        return abs(current - previous)
+        return abs((current - previous) / current)
 
     @staticmethod
     def _fmt(x: float) -> str:

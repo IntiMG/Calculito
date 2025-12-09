@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Operación en cadena (A + kB)·C / C·(A + kB)</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <style>
+    .matrix-box {
+      display: inline-block;
+      padding: 12px 18px;
+      background: #f8fafc;
+      border: 1px solid #d9e2ec;
+      border-radius: 10px;
+      position: relative;
+      margin: 10px 0;
+    }
+    .matrix-box::before,
+    .matrix-box::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      bottom: 8px;
+      width: 12px;
+      border: 2px solid #8ca0b3;
+      border-top: 0;
+      border-bottom: 0;
+    }
+    .matrix-box::before { left: 4px; border-right: 0; }
+    .matrix-box::after  { right: 4px; border-left: 0; }
+    .matrix-box table.matrix-table {
+      background: transparent;
+      border-collapse: collapse;
+    }
+    .matrix-box table.matrix-table td {
+      border: 0;
+      padding: 6px 14px;
+      text-align: center;
+      font-weight: 600;
+      color: #1f2933;
+    }
+    .matrix-label {
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #243b53;
+    }
+    .step-item {
+      border: 1px solid #e1e8f0;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f6f8fb;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Operación en cadena</h1>
+  <p>Resuelve expresiones con tres matrices: (A + kB)·C o C·(A + kB).</p>
+
+  {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
+
+  {% if step == 1 %}
+    <form method="post">
+      <input type="hidden" name="stage" value="1">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-label">Orientación</label>
+          <select class="form-input" name="mode">
+            <option value="right">Derecha: (A + kB)·C</option>
+            <option value="left">Izquierda: C·(A + kB)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Filas A / B</label>
+            <input class="form-input" type="number" name="ar" min="1" max="10" value="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Columnas A / B</label>
+            <input class="form-input" type="number" name="ac" min="1" max="10" value="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Filas C</label>
+            <input class="form-input" type="number" name="cr" min="1" max="10" value="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Columnas C</label>
+            <input class="form-input" type="number" name="cc" min="1" max="10" value="3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Escalar k</label>
+            <input class="form-input" type="text" name="k" value="1">
+          </div>
+        </div>
+        <p class="hint">A y B deben tener el mismo tamaño. Para (A + kB)·C: cols(A)=rows(C). Para C·(A + kB): cols(C)=rows(A).</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" type="submit">Continuar</button>
+          <a class="btn btn-secondary" href="{{ url_for('matrix_operations') }}">Volver</a>
+        </div>
+      </div>
+    </form>
+
+  {% elif step == 2 %}
+    <form method="post">
+      <input type="hidden" name="stage" value="2">
+      <input type="hidden" name="mode" value="{{ mode }}">
+      <input type="hidden" name="ar" value="{{ ar }}">
+      <input type="hidden" name="ac" value="{{ ac }}">
+      <input type="hidden" name="br" value="{{ br }}">
+      <input type="hidden" name="bc" value="{{ bc }}">
+      <input type="hidden" name="cr" value="{{ cr }}">
+      <input type="hidden" name="cc" value="{{ cc }}">
+      <input type="hidden" name="k" value="{{ k }}">
+
+      <div class="card">
+        <h3>Matriz A ({{ ar }}×{{ ac }})</h3>
+        <table class="matrix-table">
+          {% for i in range(ar) %}
+          <tr>
+            {% for j in range(ac) %}
+            <td><input class="matrix-cell" name="A_{{i}}_{{j}}" placeholder="0"></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+
+        <h3 style="margin-top:1rem;">Matriz B ({{ br }}×{{ bc }})</h3>
+        <table class="matrix-table">
+          {% for i in range(br) %}
+          <tr>
+            {% for j in range(bc) %}
+            <td><input class="matrix-cell" name="B_{{i}}_{{j}}" placeholder="0"></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+
+        <h3 style="margin-top:1rem;">Matriz C ({{ cr }}×{{ cc }})</h3>
+        <table class="matrix-table">
+          {% for i in range(cr) %}
+          <tr>
+            {% for j in range(cc) %}
+            <td><input class="matrix-cell" name="C_{{i}}_{{j}}" placeholder="0"></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+
+        <div class="btn-group" style="margin-top:1rem;">
+          <button class="btn btn-primary" type="submit">Resolver</button>
+          <a class="btn btn-secondary" href="{{ url_for('matrix_chain') }}">Volver</a>
+        </div>
+      </div>
+    </form>
+
+  {% elif step == 3 %}
+    <div class="card">
+      <h3>Resultado</h3>
+      <p>{{ "C·(A + kB)" if mode == "left" else "(A + kB)·C" }}, con k = {{ k }}</p>
+      <div class="matrix-box">
+        <table class="matrix-table">
+          {% for row in result %}
+          <tr>
+            {% for val in row %}
+            <td><span class="value">{{ val|fmt_num }}</span></td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Paso a paso</h3>
+      {% for block in steps %}
+      <div class="step-item">
+        <div class="step-description">{{ block.title }}</div>
+        <div class="matrix-row" style="gap:10px; flex-wrap:wrap;">
+          {% for m in block.matrices %}
+          <div>
+            <div class="matrix-label">{{ m.label }}</div>
+            <div class="matrix-box">
+              <table class="matrix-table">
+                {% for r in m.matrix %}
+                <tr>{% for v in r %}<td>{{ v }}</td>{% endfor %}</tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="btn-group">
+      <a class="btn btn-primary" href="{{ url_for('matrix_chain') }}">Nueva operación</a>
+      <a class="btn btn-secondary" href="{{ url_for('matrix_operations') }}">Volver a Operaciones</a>
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>
